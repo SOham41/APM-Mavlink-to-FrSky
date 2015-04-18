@@ -1,5 +1,5 @@
 /*
-	@author 	Nils Högberg
+	@author 	Nils Hï¿½gberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -64,9 +64,8 @@ void FrSky::sendFrSky5Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataPro
 	bufferLength += addBufferData(ALTITUDE, dataProvider);
 	bufferLength += addBufferData(TEMP1, dataProvider);
 	bufferLength += addBufferData(TEMP2, dataProvider);
-	bufferLength += addBufferData(INDVOLT, dataProvider);
 	bufferLength += addBufferData(CURRENT, dataProvider);
-	bufferLength += addBufferData(VOLTAGE, dataProvider);
+	bufferLength += addBufferData(VFAS, dataProvider);
 	bufferLength += addBufferData(RPM, dataProvider);
 	frskyBuffer[bufferLength++] = tail_value;
 	bufferLength = writeBuffer(bufferLength, serialPort);
@@ -121,7 +120,7 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 		case RPM :
 		{
 			// Throttle out
-			int engineSpeed = dataProvider->getEngineSpeed() / 30;
+			int engineSpeed = dataProvider->getEngineSpeed();
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = RPM;
 			frskyBuffer[bufferLength + 2] = lsByte(engineSpeed);
@@ -152,27 +151,19 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 			return 4;
 			break;
 		}
-		case INDVOLT :
-		{
-			return 0;
-			break;
-		}
 		case ALTITUDE :
 		{
-			// Altitude in cm minus Home altitude in cm
-			// Altitude in Taranis is offset by -10 m
-			float altitude = dataProvider->getAltitude() + 10.0f;
+			int alt = (int)(dataProvider->getAltitude() * 100.0f + 0.5f);
+			int bp = alt / 100;
+			int ap = abs(alt) % 100;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = ALTITUDE;
-			frskyBuffer[bufferLength + 2] = lsByte((int)altitude);
-			frskyBuffer[bufferLength + 3] = msByte((int)altitude);
-      
-			unsigned int temp = (unsigned int)((altitude - (int)altitude) * 100.0f);
-    
+			frskyBuffer[bufferLength + 2] = lsByte(bp);
+			frskyBuffer[bufferLength + 3] = msByte(bp);
 			frskyBuffer[bufferLength + 4] = header_value;
 			frskyBuffer[bufferLength + 5] = ALTIDEC;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
+			frskyBuffer[bufferLength + 6] = lsByte(ap);
+			frskyBuffer[bufferLength + 7] = msByte(ap);
 			return 8;
 			break;
 		}
@@ -300,40 +291,39 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 		case ACCX :
 		{
 			//float accX = par->termToDecimal(17) / 100.0f;
-			float accX = dataProvider->getAccX();
+			float accX = dataProvider->getAccX()*1000.0f;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = ACCX;
-			frskyBuffer[bufferLength + 2] = lsByte((int)(accX*1000.0f));
-			frskyBuffer[bufferLength + 3] = msByte((int)(accX*1000.0f));
+			frskyBuffer[bufferLength + 2] = lsByte((int)(accX));
+			frskyBuffer[bufferLength + 3] = msByte((int)(accX));
 			return 4;
 			break;
 		}
 		case ACCY :
 		{
 			//float accY = par->termToDecimal(18) / 100.0f;
-			float accY =  dataProvider->getAccY();
+			float accY =  dataProvider->getAccY()*1000.0f;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = ACCY;
-			frskyBuffer[bufferLength + 2] = lsByte((int)(accY*1000.0f));
-			frskyBuffer[bufferLength + 3] = msByte((int)(accY*1000.0f));
+			frskyBuffer[bufferLength + 2] = lsByte((int)(accY));
+			frskyBuffer[bufferLength + 3] = msByte((int)(accY));
 			return 4;
 			break;
 		}
 		case ACCZ :
 		{
 			//float accZ = par->termToDecimal(19) / 100.0f;
-			float accZ = dataProvider->getAccZ();
+			float accZ = dataProvider->getAccZ()*1000.0f;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = ACCZ;
-			frskyBuffer[bufferLength + 2] = lsByte((int)(accZ*1000.0f));
-			frskyBuffer[bufferLength + 3] = msByte((int)(accZ*1000.0f));
+			frskyBuffer[bufferLength + 2] = lsByte((int)(accZ));
+			frskyBuffer[bufferLength + 3] = msByte((int)(accZ));
 			return 4;
 			break;
 		}
 		case CURRENT :
 		{
-			//float current = par->termToDecimal(1) / 1000.0f; // 10.0f -> 1A
-			float current = dataProvider->getBatteryCurrent();
+			float current = dataProvider->getBatteryCurrent() * 10.0f + 0.5f;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = CURRENT;
 			frskyBuffer[bufferLength + 2] = lsByte((int)(current));
@@ -341,24 +331,14 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 			return 4;
 			break;
 		}
-		case VOLTAGE :
+		case VFAS :
 		{
-			//float batteryVoltage = par->termToDecimal(0) * 0.5238f;
-			//float batteryVoltage = 100.0f * 0.5238;
-			float batteryVoltage = dataProvider->getMainBatteryVoltage() * 0.5238f;
+			float batteryVoltage = dataProvider->getMainBatteryVoltage() * 10.0f + 0.5f;
 			frskyBuffer[bufferLength] = header_value;
-			frskyBuffer[bufferLength + 1] = VOLTAGE;
+			frskyBuffer[bufferLength + 1] = VFAS;
 			frskyBuffer[bufferLength + 2] = lsByte((int)batteryVoltage);
 			frskyBuffer[bufferLength + 3] = msByte((int)batteryVoltage);
-      
-			unsigned int temp = (unsigned int)((batteryVoltage - (int)batteryVoltage) * 10.0f);
-    
-			frskyBuffer[bufferLength + 4] = header_value;
-			frskyBuffer[bufferLength + 5] = VOLTAGEDEC;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
-
-			return 8;
+			return 4;
 			break;
 		}
 		default :

@@ -137,27 +137,27 @@ void setup() {
 
 void loop() {
 
-#ifdef MAVLINKTELEMETRY
-	if( dataProvider->enable_mav_request || (millis() - dataProvider->lastMAVBeat > 5000) )
-	{
-		if(millis() - rateRequestTimer > 2000)
-		{
-			for(int n = 0; n < 3; n++)
-			{
-#ifdef DEBUG
-				debugSerial->println("Making rate request.");
-#endif
-				dataProvider->makeRateRequest();
-				delay(50);
-			}
+// #ifdef MAVLINKTELEMETRY
+// 	if( dataProvider->enable_mav_request || (millis() - dataProvider->lastMAVBeat > 5000) )
+// 	{
+// 		if(millis() - rateRequestTimer > 2000)
+// 		{
+// 			for(int n = 0; n < 3; n++)
+// 			{
+// #ifdef DEBUG
+// 				debugSerial->println("Making rate request.");
+// #endif
+// 				dataProvider->makeRateRequest();
+// 				delay(50);
+// 			}
 			
-			dataProvider->enable_mav_request = 0;
-			dataProvider->waitingMAVBeats = 0;
-			rateRequestTimer = millis();
-		}
+// 			dataProvider->enable_mav_request = 0;
+// 			dataProvider->waitingMAVBeats = 0;
+// 			rateRequestTimer = millis();
+// 		}
 		
-	}
-#endif
+// 	}
+// #endif
 
 	while (Serial.available() > 0)
 	{

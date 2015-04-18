@@ -1,5 +1,5 @@
 /*
-	@author 	Nils Högberg
+	@author 	Nils Hï¿½gberg
 	@contact 	nils.hogberg@gmail.com
 
 	Original code from https://code.google.com/p/arducam-osd/wiki/arducam_osd
@@ -30,6 +30,8 @@
 
 
 Mavlink::Mavlink(BetterStream* port)
+  : batteryVoltage(0.7),
+  current(0.7)
 {
 	mavlink_comm_0_port = port;
 	mavlink_system.sysid = 12;
@@ -38,12 +40,10 @@ Mavlink::Mavlink(BetterStream* port)
 	mavlink_system.state = 0;
 	
 	lastMAVBeat = 0;
-	mavlink_active = 0;
+	// mavlink_active = 0;
 	waitingMAVBeats = 0;
 	enable_mav_request = 1;
 
-	batteryVoltage = 0;
-	current = 0;
 	batteryRemaining = 0;
 	gpsStatus = 0;
 	latitude = 0;
@@ -68,12 +68,12 @@ Mavlink::~Mavlink(void)
 
 const float Mavlink::getMainBatteryVoltage()
 {
-	return batteryVoltage;
+	return batteryVoltage.get();
 }
 
 const float Mavlink::getBatteryCurrent()
 {
-	return current / 1000.0f;
+	return current.get();
 }
 
 const int Mavlink::getFuelLevel()
@@ -118,7 +118,7 @@ const float Mavlink::getGpsGroundSpeed()
 
 const float Mavlink::getAltitude()
 {
-	return altitude / 100.0f;
+	return altitude;
 }
 
 const int Mavlink::getTemp1()
@@ -197,51 +197,51 @@ void Mavlink::makeRateRequest()
 bool Mavlink::parseMessage(char c)
 {
 	mavlink_message_t msg; 
-    mavlink_status_t status;
+   mavlink_status_t status;
 
-	// allow CLI to be started by hitting enter 3 times, if no heartbeat packets have been received
-	if (mavlink_active == 0 && millis() < 20000 && millis() > 5000)
-	{
-		if (c == '\n' || c == '\r')
-		{
-			crlf_count++;
-		}
-		else 
-		{
-			crlf_count = 0;
-		}
-	}
+	// // allow CLI to be started by hitting enter 3 times, if no heartbeat packets have been received
+	// if (mavlink_active == 0 && millis() < 20000 && millis() > 5000)
+	// {
+	// 	if (c == '\n' || c == '\r')
+	// 	{
+	// 		crlf_count++;
+	// 	}
+	// 	else 
+	// 	{
+	// 		crlf_count = 0;
+	// 	}
+	// }
 
-    //trying to grab msg  
+  //trying to grab msg  
 	if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) 
 	{
-            mavlink_active = 1;
-			switch(msg.msgid) {
-            case MAVLINK_MSG_ID_HEARTBEAT:
-            {
-                mavbeat = 1;
-                apm_mav_system    = msg.sysid;
-                apm_mav_component = msg.compid;
-                apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);            
-                apmMode			  = (unsigned int)mavlink_msg_heartbeat_get_custom_mode(&msg);
-				apmBaseMode		  = mavlink_msg_heartbeat_get_base_mode(&msg);
+            // mavlink_active = 1;
+		switch(msg.msgid) {
+      case MAVLINK_MSG_ID_HEARTBEAT:
+        {
+          mavbeat = 1;
+          apm_mav_system    = msg.sysid;
+          apm_mav_component = msg.compid;
+          apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);            
+          apmMode			  = (unsigned int)mavlink_msg_heartbeat_get_custom_mode(&msg);
+      		apmBaseMode		  = mavlink_msg_heartbeat_get_base_mode(&msg);
 
-                //if(getBit(base_mode,7)) motor_armed = 1;
-                //else motor_armed = 0;
+          //if(getBit(base_mode,7)) motor_armed = 1;
+          //else motor_armed = 0;
 
-                //osd_nav_mode = 0;          
-                lastMAVBeat = millis();
-                if(waitingMAVBeats == 1)
-				{
-                    enable_mav_request = 1;
-                }
-				return true;
-				break;
+          //osd_nav_mode = 0;          
+          lastMAVBeat = millis();
+          if(waitingMAVBeats == 1)
+		      {
+            enable_mav_request = 1;
             }
+		return true;
+		break;
+        }
 			case MAVLINK_MSG_ID_SYS_STATUS:
             {
-                batteryVoltage = (mavlink_msg_sys_status_get_voltage_battery(&msg) / 1000.0f); //Battery voltage, in millivolts (1 = 1 millivolt)
-                current = mavlink_msg_sys_status_get_current_battery(&msg); //Battery current, in 10*milliamperes (1 = 10 milliampere)         
+                batteryVoltage.sample(mavlink_msg_sys_status_get_voltage_battery(&msg) / 1000.0f); //Battery voltage, in millivolts (1 = 1 millivolt)
+                current.sample(mavlink_msg_sys_status_get_current_battery(&msg) / 100.0f); //Battery current, in 10*milliamperes (1 = 10 milliampere)         
                 batteryRemaining = mavlink_msg_sys_status_get_battery_remaining(&msg); //Remaining battery energy: (0%: 0, 100%: 100)
 				return true;
 				break;

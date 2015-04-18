@@ -27,6 +27,22 @@
 //#include "../GCS_MAVLink/include/mavlink/v1.0/mavlink_types.h"
 //#include "../GCS_MAVLink/include/mavlink/v1.0/ardupilotmega/mavlink.h"
 
+
+class FilteredValue 
+{
+private:
+	float level;
+	float value;
+
+public:
+	FilteredValue(float level) : level(level), value(0.0f) {};
+
+	void sample(float rawValue) {
+		value = value * level + (1.0f - level) * rawValue;
+	}
+	float get() const { return value; };
+};
+
 class Mavlink :	public IFrSkyDataProvider
 {
 public:
@@ -35,7 +51,7 @@ public:
 	bool			parseMessage(char c);
 	void			makeRateRequest();
 	bool			enable_mav_request;
-	bool			mavlink_active;
+	// bool			mavlink_active;
 	bool			waitingMAVBeats;
 	unsigned long	lastMAVBeat;
 	const int		getGpsStatus();
@@ -73,8 +89,8 @@ private:
 	int				parse_error;
 
 	// Telemetry values
-	float			batteryVoltage;
-	float			current;
+	FilteredValue	batteryVoltage;
+	FilteredValue	current;
 	int				batteryRemaining;
 	int				gpsStatus;
 	float			latitude;
