@@ -1,5 +1,5 @@
 /*
-	@author 	Nils Högberg
+	@author 	Nils Hï¿½gberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 #define PROGMEM __attribute__(( section(".progmem.data") )) 
 
 #undef PSTR 
-#define PSTR(s) (__extension__({static prog_char __c[] PROGMEM = (s); &__c[0];})) 
+#define PSTR(s) (__extension__({static char __c[] PROGMEM = (s); &__c[0];})) 
 
 #include <SoftwareSerial.h>
 #include <FlexiTimer2.h>
@@ -29,6 +29,9 @@
 #include "FrSky.h"
 #include "SimpleFIFO.h"
 #include <GCS_MAVLink.h>
+#include <AP_Common.h>
+#include <AP_Param.h>
+#include <AP_Math.h>
 
 #define HEARTBEATLED 13
 #define HEARTBEATFREQ 500
