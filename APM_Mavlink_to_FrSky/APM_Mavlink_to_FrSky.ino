@@ -24,7 +24,6 @@
 #include <SoftwareSerial.h>
 #include <FlexiTimer2.h>
 #include <FastSerial.h>
-#include "SimpleTelemetry.h"
 #include "Mavlink.h"
 #include "FrSky.h"
 #include "SimpleFIFO.h"
@@ -40,15 +39,7 @@
 //#define DEBUG
 //#define DEBUGFRSKY
 
-// Comment this to run simple telemetry protocl
-#define MAVLINKTELEMETRY
-
-#ifdef MAVLINKTELEMETRY
 Mavlink *dataProvider;
-#else
-SimpleTelemetry *dataProvider;
-#endif
-
 FastSerialPort0(Serial);
 FrSky *frSky;
 SoftwareSerial *frSkySerial;
@@ -91,11 +82,7 @@ void setup() {
 	debugSerial->print(freeRam());
 	debugSerial->println(" bytes");
 #endif
-#ifdef MAVLINKTELEMETRY
 	dataProvider = new Mavlink(&Serial);
-#else
-	dataProvider = new SimpleTelemetry();
-#endif
 	
 	
 	frSky = new FrSky();
@@ -136,28 +123,6 @@ void setup() {
 }
 
 void loop() {
-
-// #ifdef MAVLINKTELEMETRY
-// 	if( dataProvider->enable_mav_request || (millis() - dataProvider->lastMAVBeat > 5000) )
-// 	{
-// 		if(millis() - rateRequestTimer > 2000)
-// 		{
-// 			for(int n = 0; n < 3; n++)
-// 			{
-// #ifdef DEBUG
-// 				debugSerial->println("Making rate request.");
-// #endif
-// 				dataProvider->makeRateRequest();
-// 				delay(50);
-// 			}
-			
-// 			dataProvider->enable_mav_request = 0;
-// 			dataProvider->waitingMAVBeats = 0;
-// 			rateRequestTimer = millis();
-// 		}
-		
-// 	}
-// #endif
 
 	while (Serial.available() > 0)
 	{
