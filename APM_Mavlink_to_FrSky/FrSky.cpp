@@ -1,5 +1,5 @@
 /*
-	@author 	Nils Högberg
+	@author 	Nils HÃ¶gberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -64,9 +64,8 @@ void FrSky::sendFrSky5Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataPro
 	bufferLength += addBufferData(ALTITUDE, dataProvider);
 	bufferLength += addBufferData(TEMP1, dataProvider);
 	bufferLength += addBufferData(TEMP2, dataProvider);
-	bufferLength += addBufferData(INDVOLT, dataProvider);
 	bufferLength += addBufferData(CURRENT, dataProvider);
-	bufferLength += addBufferData(VOLTAGE, dataProvider);
+	bufferLength += addBufferData(VFAS, dataProvider);
 	bufferLength += addBufferData(RPM, dataProvider);
 	frskyBuffer[bufferLength++] = tail_value;
 	bufferLength = writeBuffer(bufferLength, serialPort);
@@ -89,22 +88,17 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 	switch(id) {
 		case GPSALT :
 		{
-			//float gpsAltitude = par->termToDecimal(6) * 100.0f + 100.0f; // GPS Altitude i m, offset by 100
-			float gpsAltitude = dataProvider->getGpsAltitude() + 100.0f;
+			int gpsAltitude = dataProvider->getGpsAltitude();
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = GPSALT;
-			frskyBuffer[bufferLength + 2] = lsByte((int)gpsAltitude);
-			frskyBuffer[bufferLength + 3] = msByte((int)gpsAltitude);
-      
-			unsigned int temp = (unsigned int)((gpsAltitude - (int)gpsAltitude) * 1000.0f);
-
+			frskyBuffer[bufferLength + 2] = lsByte(gpsAltitude);
+			frskyBuffer[bufferLength + 3] = msByte(gpsAltitude);
+			//we send 0 for decimal places
 			frskyBuffer[bufferLength + 4] = header_value;
 			frskyBuffer[bufferLength + 5] = GPSALT + decimal;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
-      
+			frskyBuffer[bufferLength + 6] = 0;
+			frskyBuffer[bufferLength + 7] = 0;
 			return 8;
-			break;
 		}
 		case TEMP1 :
 		{
@@ -114,20 +108,17 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 			frskyBuffer[bufferLength + 1] = TEMP1;
 			frskyBuffer[bufferLength + 2] = lsByte(temp1);
 			frskyBuffer[bufferLength + 3] = msByte(temp1);
-      
 			return 4;
-			break;
 		}
 		case RPM :
 		{
 			// Throttle out
-			int engineSpeed = dataProvider->getEngineSpeed() / 30;
+			int engineSpeed = dataProvider->getEngineSpeed();
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = RPM;
 			frskyBuffer[bufferLength + 2] = lsByte(engineSpeed);
 			frskyBuffer[bufferLength + 3] = msByte(engineSpeed);
 			return 4;
-			break;
 		}
 		case FUEL :
 		{
@@ -137,9 +128,7 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 			frskyBuffer[bufferLength + 1] = FUEL;
 			frskyBuffer[bufferLength + 2] = lsByte(fuelLevel);
 			frskyBuffer[bufferLength + 3] = msByte(fuelLevel); 
-			
 			return 4;
-			break;
 		}
 		case TEMP2 :
 		{
@@ -150,120 +139,103 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 			frskyBuffer[bufferLength + 2] = lsByte(value);
 			frskyBuffer[bufferLength + 3] = msByte(value);
 			return 4;
-			break;
-		}
-		case INDVOLT :
-		{
-			return 0;
-			break;
 		}
 		case ALTITUDE :
 		{
-			// Altitude in cm minus Home altitude in cm
-			// Altitude in Taranis is offset by -10 m
-			float altitude = dataProvider->getAltitude() + 10.0f;
+			int alt = (int)(dataProvider->getAltitude() * 100.0f + 0.5f);
+			int16_t bp = alt / 100;
+			int16_t ap = alt % 100;
+			if (ap < 0) ap = -ap;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = ALTITUDE;
-			frskyBuffer[bufferLength + 2] = lsByte((int)altitude);
-			frskyBuffer[bufferLength + 3] = msByte((int)altitude);
-      
-			unsigned int temp = (unsigned int)((altitude - (int)altitude) * 100.0f);
-    
+			frskyBuffer[bufferLength + 2] = lsByte(bp);
+			frskyBuffer[bufferLength + 3] = msByte(bp);
 			frskyBuffer[bufferLength + 4] = header_value;
 			frskyBuffer[bufferLength + 5] = ALTIDEC;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
+			frskyBuffer[bufferLength + 6] = lsByte(ap);
+			frskyBuffer[bufferLength + 7] = msByte(ap);
 			return 8;
-			break;
 		}
 		case GPSSPEED :
 		{
-			// GPS Ground speed in knots
-			// Seems like there is an offset of 1.84 for some reason
-			float gpsSpeed  = dataProvider->getGpsGroundSpeed() / 1.84f;
+			// convert from m/s to knots  (multiply by 1.94384)
+			uint16_t gpsSpeed  = (uint16_t)(dataProvider->getGpsGroundSpeed() * 1.94384f + 0.5f);
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = GPSSPEED;
-			frskyBuffer[bufferLength + 2] = lsByte((int)gpsSpeed);
-			frskyBuffer[bufferLength + 3] = msByte((int)gpsSpeed);
-      
-			unsigned int temp = (unsigned int)((gpsSpeed - (int)gpsSpeed) * 1000.0f);
-    
+			frskyBuffer[bufferLength + 2] = lsByte(gpsSpeed);
+			frskyBuffer[bufferLength + 3] = msByte(gpsSpeed);
+			// send zero for decimals
 			frskyBuffer[bufferLength + 4] = header_value;
 			frskyBuffer[bufferLength + 5] = GPSSPEED + decimal;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
-      
+			frskyBuffer[bufferLength + 6] = 0;
+			frskyBuffer[bufferLength + 7] = 0;
 			return 8;
-			break;
 		}
 		case LATITUDE :
 		{
-			//float gpsLatitude = gpsDdToDmsFormat(termToDecimal(4) / 10000000.0f);
-			float gpsLatitude = dataProvider->getLatitude();
+			int32_t val = dataProvider->getLatitude();
+			//convert from 1E7 degrees to frsky format which is
+			// BP = DDMM   degrees * 100 + minutes (whole part)
+			// AP = MMMM   minutes (decimal part)
+			int degrees = val / 10000000;
+			uint32_t minutes = ((val % 10000000) * 6) / 100;
+			if (minutes < 0) minutes = -minutes;
+			uint16_t minutes_bp = 100 * degrees + minutes / 10000;
+			uint16_t minutes_ap = minutes % 10000;
+
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = LATITUDE;
-			frskyBuffer[bufferLength + 2] = lsByte((int)gpsLatitude);
-			frskyBuffer[bufferLength + 3] = msByte((int)gpsLatitude);
-      
-			unsigned int temp = (unsigned int)((gpsLatitude - (int)gpsLatitude) * 10000.0f);
-    
+			frskyBuffer[bufferLength + 2] = minutes_bp & 0xFF;
+			frskyBuffer[bufferLength + 3] = (minutes_bp >> 8) & 0xFF;
 			frskyBuffer[bufferLength + 4] = header_value;
 			frskyBuffer[bufferLength + 5] = LATITUDE + decimal;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
-      
-			char northSouth = (gpsLatitude < 0) ? 'S' : 'N';
+			frskyBuffer[bufferLength + 6] = minutes_ap & 0xFF;
+			frskyBuffer[bufferLength + 7] = (minutes_ap >> 8) & 0xFF;
 			frskyBuffer[bufferLength + 8] = header_value;
 			frskyBuffer[bufferLength + 9] = NORTHSOUTH;
-			frskyBuffer[bufferLength + 10] = northSouth;
+			frskyBuffer[bufferLength + 10] = (degrees < 0) ? 'S' : 'N';
 			frskyBuffer[bufferLength + 11] = 0;
-      
 			return 12;
-			break;
 		}
 		case LONGITUDE :
 		{
-			//float gpsLongitude = gpsDdToDmsFormat(termToDecimal(5) / 10000000.0f);
-			float gpsLongitude = dataProvider->getLongitud();
+			int32_t val = dataProvider->getLongitude();
+			//convert from 1E7 degrees to frsky format which is
+			// BP = DDMM   degrees * 100 + minutes (whole part)
+			// AP = MMMM   minutes (decimal part)
+			int degrees = val / 10000000;
+			uint32_t minutes = ((val % 10000000) * 6) / 100;
+			if (minutes < 0) minutes = -minutes;
+			uint16_t minutes_bp = 100 * degrees + minutes / 10000;
+			uint16_t minutes_ap = minutes % 10000;
+
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = LONGITUDE;
-			frskyBuffer[bufferLength + 2] = lsByte((int)gpsLongitude);
-			frskyBuffer[bufferLength + 3] = msByte((int)gpsLongitude);
-      
-			unsigned int temp = (unsigned int)((gpsLongitude - (int)gpsLongitude) * 10000.0f);
-    
+			frskyBuffer[bufferLength + 2] = minutes_bp & 0xFF;
+			frskyBuffer[bufferLength + 3] = (minutes_bp >> 8) & 0xFF;
 			frskyBuffer[bufferLength + 4] = header_value;
 			frskyBuffer[bufferLength + 5] = LONGITUDE + decimal;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
-			
-			char eastWest = (gpsLongitude < 0 ) ? 'W' : 'E';
+			frskyBuffer[bufferLength + 6] = minutes_ap & 0xFF;
+			frskyBuffer[bufferLength + 7] = (minutes_ap >> 8) & 0xFF;
 			frskyBuffer[bufferLength + 8] = header_value;
 			frskyBuffer[bufferLength + 9] = EASTWEST;
-			frskyBuffer[bufferLength + 10] = eastWest;
+			frskyBuffer[bufferLength + 10] = (degrees < 0 ) ? 'W' : 'E';
 			frskyBuffer[bufferLength + 11] = 0;
-      
 			return 12;
-			break;
 		}
 		case COURSE :
 		{
-			//float course = (par->termToDecimal(14) / 100.0f); // Course in 1/100 degree
-			float course = dataProvider->getCourse();
+			int16_t course = dataProvider->getCourse();
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = COURSE;
-			frskyBuffer[bufferLength + 2] = lsByte((int)course);
-			frskyBuffer[bufferLength + 3] = msByte((int)course);
-      
-			unsigned int temp = (unsigned int)((course - (int)course) * 1000.0f);
-    
+			frskyBuffer[bufferLength + 2] = lsByte(course);
+			frskyBuffer[bufferLength + 3] = msByte(course);
+      // send zero for decimal part
 			frskyBuffer[bufferLength + 4] = header_value;
 			frskyBuffer[bufferLength + 5] = COURSE + decimal;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
-      
+			frskyBuffer[bufferLength + 6] = 0;
+			frskyBuffer[bufferLength + 7] = 0;
 			return 8;
-			break;
 		}
 		case DATE :
 		{
@@ -272,7 +244,6 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 			frskyBuffer[bufferLength + 2] = lsByte(dataProvider->getDate());
 			frskyBuffer[bufferLength + 3] = msByte(dataProvider->getDate());
 			return 4;
-			break;
 		}
 		case YEAR :
 		{
@@ -281,7 +252,6 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 			frskyBuffer[bufferLength + 2] = lsByte(dataProvider->getYear());
 			frskyBuffer[bufferLength + 3] = msByte(dataProvider->getYear());
 			return 4;
-			break;
 		}
 		case TIME :
 		{
@@ -290,76 +260,58 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
 			frskyBuffer[bufferLength + 2] = lsByte(dataProvider->getTime());
 			frskyBuffer[bufferLength + 3] = msByte(dataProvider->getTime());
 			return 4;
-			break;
 		}
 		case SECOND :
 		{
 			return 0;
-			break;
 		}
 		case ACCX :
 		{
 			//float accX = par->termToDecimal(17) / 100.0f;
-			float accX = dataProvider->getAccX();
+			float accX = dataProvider->getAccX()*1000.0f;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = ACCX;
-			frskyBuffer[bufferLength + 2] = lsByte((int)(accX*1000.0f));
-			frskyBuffer[bufferLength + 3] = msByte((int)(accX*1000.0f));
+			frskyBuffer[bufferLength + 2] = lsByte((int)(accX));
+			frskyBuffer[bufferLength + 3] = msByte((int)(accX));
 			return 4;
-			break;
 		}
 		case ACCY :
 		{
 			//float accY = par->termToDecimal(18) / 100.0f;
-			float accY =  dataProvider->getAccY();
+			float accY =  dataProvider->getAccY()*1000.0f;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = ACCY;
-			frskyBuffer[bufferLength + 2] = lsByte((int)(accY*1000.0f));
-			frskyBuffer[bufferLength + 3] = msByte((int)(accY*1000.0f));
+			frskyBuffer[bufferLength + 2] = lsByte((int)(accY));
+			frskyBuffer[bufferLength + 3] = msByte((int)(accY));
 			return 4;
-			break;
 		}
 		case ACCZ :
 		{
 			//float accZ = par->termToDecimal(19) / 100.0f;
-			float accZ = dataProvider->getAccZ();
+			float accZ = dataProvider->getAccZ()*1000.0f;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = ACCZ;
-			frskyBuffer[bufferLength + 2] = lsByte((int)(accZ*1000.0f));
-			frskyBuffer[bufferLength + 3] = msByte((int)(accZ*1000.0f));
+			frskyBuffer[bufferLength + 2] = lsByte((int)(accZ));
+			frskyBuffer[bufferLength + 3] = msByte((int)(accZ));
 			return 4;
-			break;
 		}
 		case CURRENT :
 		{
-			//float current = par->termToDecimal(1) / 1000.0f; // 10.0f -> 1A
-			float current = dataProvider->getBatteryCurrent();
+			float current = dataProvider->getBatteryCurrent() * 10.0f + 0.5f;
 			frskyBuffer[bufferLength] = header_value;
 			frskyBuffer[bufferLength + 1] = CURRENT;
 			frskyBuffer[bufferLength + 2] = lsByte((int)(current));
 			frskyBuffer[bufferLength + 3] = msByte((int)(current));
 			return 4;
-			break;
 		}
-		case VOLTAGE :
+		case VFAS :
 		{
-			//float batteryVoltage = par->termToDecimal(0) * 0.5238f;
-			//float batteryVoltage = 100.0f * 0.5238;
-			float batteryVoltage = dataProvider->getMainBatteryVoltage() * 0.5238f;
+			float batteryVoltage = dataProvider->getMainBatteryVoltage() * 10.0f + 0.5f;
 			frskyBuffer[bufferLength] = header_value;
-			frskyBuffer[bufferLength + 1] = VOLTAGE;
+			frskyBuffer[bufferLength + 1] = VFAS;
 			frskyBuffer[bufferLength + 2] = lsByte((int)batteryVoltage);
 			frskyBuffer[bufferLength + 3] = msByte((int)batteryVoltage);
-      
-			unsigned int temp = (unsigned int)((batteryVoltage - (int)batteryVoltage) * 10.0f);
-    
-			frskyBuffer[bufferLength + 4] = header_value;
-			frskyBuffer[bufferLength + 5] = VOLTAGEDEC;
-			frskyBuffer[bufferLength + 6] = lsByte(temp);
-			frskyBuffer[bufferLength + 7] = msByte(temp);
-
-			return 8;
-			break;
+			return 4;
 		}
 		default :
 			return 0;
@@ -417,9 +369,9 @@ void FrSky::printValues(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProv
 	serialPort->print(" Fuel: ");
 	serialPort->print(dataProvider->getFuelLevel());
 	serialPort->print(" Latitude: ");
-	serialPort->print(dataProvider->getLatitude(), 6);
+	serialPort->print(dataProvider->getLatitude());
 	serialPort->print(" Longitude: ");
-	serialPort->print(dataProvider->getLongitud(), 6);
+	serialPort->print(dataProvider->getLongitude());
 	serialPort->print(" GPS Alt: ");
 	serialPort->print(dataProvider->getGpsAltitude(), 2);
 	//serialPort->print(" GPS hdop: ");
@@ -433,7 +385,7 @@ void FrSky::printValues(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProv
 	serialPort->print(" Mode: ");
 	serialPort->print(dataProvider->getTemp1());
 	serialPort->print(" Course: ");
-	serialPort->print(dataProvider->getCourse(), 2);
+	serialPort->print(dataProvider->getCourse());
 	serialPort->print(" RPM: ");
 	serialPort->print(dataProvider->getEngineSpeed());
 	serialPort->print(" AccX: ");

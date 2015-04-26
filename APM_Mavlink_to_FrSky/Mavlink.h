@@ -1,5 +1,5 @@
 /*
-	@author 	Nils Högberg
+	@author 	Nils HÃ¶gberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
 #ifndef mavlink_h
 #define mavlink_h
 
-#include "ifrskydataprovider.h"
+#include "IFrSkyDataProvider.h"
 #include "SoftwareSerial.h"
 #include <FastSerial.h>
 //#include <mavlink.h>
@@ -26,6 +26,22 @@
 //#include <../Libraries/GCS_MAVLink/GCS_MAVLink.h>
 //#include "../GCS_MAVLink/include/mavlink/v1.0/mavlink_types.h"
 //#include "../GCS_MAVLink/include/mavlink/v1.0/ardupilotmega/mavlink.h"
+
+
+class FilteredValue 
+{
+private:
+	float level;
+	float value;
+
+public:
+	FilteredValue(float level) : level(level), value(0.0f) {};
+
+	void sample(float rawValue) {
+		value = value * level + (1.0f - level) * rawValue;
+	}
+	float get() const { return value; };
+};
 
 class Mavlink :	public IFrSkyDataProvider
 {
@@ -35,23 +51,23 @@ public:
 	bool			parseMessage(char c);
 	void			makeRateRequest();
 	bool			enable_mav_request;
-	bool			mavlink_active;
+	// bool			mavlink_active;
 	bool			waitingMAVBeats;
 	unsigned long	lastMAVBeat;
 	const int		getGpsStatus();
 	const float		getGpsHdop();
 
 	// IFrSkyDataProvider functions
-	const float		getGpsAltitude();
+	const int32_t getGpsAltitude();
 	const int		getTemp1();
 	const int		getEngineSpeed();
 	const int		getFuelLevel();
 	const int		getTemp2();
 	const float		getAltitude();
 	const float		getGpsGroundSpeed();
-	const float		getLongitud();
-	const float		getLatitude();
-	const float		getCourse();
+	const int32_t	getLongitude();
+	const int32_t	getLatitude();
+	const int 		getCourse();
 	const int		getYear();
 	const int		getDate();
 	const int		getTime();
@@ -73,13 +89,13 @@ private:
 	int				parse_error;
 
 	// Telemetry values
-	float			batteryVoltage;
-	float			current;
+	FilteredValue	batteryVoltage;
+	FilteredValue	current;
 	int				batteryRemaining;
 	int				gpsStatus;
 	float			latitude;
 	float			longitude;
-	float			gpsAltitude;
+	int32_t 	gpsAltitude;
 	float			gpsHdop;
 	int				numberOfSatelites;
 	float			gpsGroundSpeed;
@@ -87,7 +103,7 @@ private:
 	float			altitude;
 	int				apmMode;
 	int				apmBaseMode;
-	float			course;
+	int 			course;
 	float			throttle;
 	float			accX;
 	float			accY;

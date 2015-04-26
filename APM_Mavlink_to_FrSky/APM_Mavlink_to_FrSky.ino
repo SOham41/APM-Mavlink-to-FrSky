@@ -1,5 +1,5 @@
 /*
-	@author 	Nils Högberg
+	@author 	Nils HÃ¶gberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -19,16 +19,18 @@
 #define PROGMEM __attribute__(( section(".progmem.data") )) 
 
 #undef PSTR 
-#define PSTR(s) (__extension__({static prog_char __c[] PROGMEM = (s); &__c[0];})) 
+#define PSTR(s) (__extension__({static char __c[] PROGMEM = (s); &__c[0];})) 
 
 #include <SoftwareSerial.h>
 #include <FlexiTimer2.h>
 #include <FastSerial.h>
-#include "SimpleTelemetry.h"
 #include "Mavlink.h"
 #include "FrSky.h"
 #include "SimpleFIFO.h"
 #include <GCS_MAVLink.h>
+#include <AP_Common.h>
+#include <AP_Param.h>
+#include <AP_Math.h>
 
 #define HEARTBEATLED 13
 #define HEARTBEATFREQ 500
@@ -37,15 +39,7 @@
 //#define DEBUG
 //#define DEBUGFRSKY
 
-// Comment this to run simple telemetry protocl
-#define MAVLINKTELEMETRY
-
-#ifdef MAVLINKTELEMETRY
 Mavlink *dataProvider;
-#else
-SimpleTelemetry *dataProvider;
-#endif
-
 FastSerialPort0(Serial);
 FrSky *frSky;
 SoftwareSerial *frSkySerial;
@@ -88,11 +82,7 @@ void setup() {
 	debugSerial->print(freeRam());
 	debugSerial->println(" bytes");
 #endif
-#ifdef MAVLINKTELEMETRY
 	dataProvider = new Mavlink(&Serial);
-#else
-	dataProvider = new SimpleTelemetry();
-#endif
 	
 	
 	frSky = new FrSky();
@@ -108,7 +98,7 @@ void setup() {
 #endif
 
 	// Blink fast a couple of times to wait for the APM to boot
-	for (int i = 0; i < 250; i++)
+	for (int i = 0; i < 100; i++)
 	{
 		if (i % 2)
 		{
@@ -133,28 +123,6 @@ void setup() {
 }
 
 void loop() {
-
-#ifdef MAVLINKTELEMETRY
-	if( dataProvider->enable_mav_request || (millis() - dataProvider->lastMAVBeat > 5000) )
-	{
-		if(millis() - rateRequestTimer > 2000)
-		{
-			for(int n = 0; n < 3; n++)
-			{
-#ifdef DEBUG
-				debugSerial->println("Making rate request.");
-#endif
-				dataProvider->makeRateRequest();
-				delay(50);
-			}
-			
-			dataProvider->enable_mav_request = 0;
-			dataProvider->waitingMAVBeats = 0;
-			rateRequestTimer = millis();
-		}
-		
-	}
-#endif
 
 	while (Serial.available() > 0)
 	{

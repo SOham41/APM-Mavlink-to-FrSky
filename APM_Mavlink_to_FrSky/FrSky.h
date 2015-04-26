@@ -1,5 +1,5 @@
 /*
-	@author 	Nils Högberg
+	@author 	Nils HÃ¶gberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -22,7 +22,7 @@
 //#define lowByte(w) ((uint8_t) ((w) & 0xff))
 //#define highByte(w) ((uint8_t) ((w) >> 8))
 
-#include "SimpleTelemetry.h"
+#include "IFrSkyDataProvider.h"
 #include <SoftwareSerial.h>
 #include "defines.h"
 

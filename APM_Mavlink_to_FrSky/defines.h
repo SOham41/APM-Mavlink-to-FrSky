@@ -1,5 +1,5 @@
 /*
-	@author 	Nils Högberg
+	@author 	Nils HÃ¶gberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -52,8 +52,7 @@ typedef unsigned char byte;
 #define ACCY           0x25
 #define ACCZ           0x26
 #define CURRENT        0x28
-#define VOLTAGE        0x3A
-#define VOLTAGEDEC     0x3B
+#define VFAS           0x39
 
 /*
 0x01  GPS Altitude          M     int16
