@@ -1,5 +1,5 @@
 /*
-	@author 	Nils H�gberg
+	@author 	Nils Högberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify

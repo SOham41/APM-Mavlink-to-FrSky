@@ -1,5 +1,5 @@
 /*
-	@author 	Nils H�gberg
+	@author 	Nils Högberg
 	@contact 	nils.hogberg@gmail.com
 
 	Original code from https://code.google.com/p/arducam-osd/wiki/arducam_osd
@@ -86,19 +86,20 @@ const int Mavlink::getGpsStatus()
 	return gpsStatus;
 }
 
-const float Mavlink::getLatitude()
+const int32_t Mavlink::getLatitude()
 {
-	return gpsDdToDmsFormat(latitude / 10000000.0f);
+	return latitude;
 }
 
-const float Mavlink::getLongitud()
+const int32_t Mavlink::getLongitude()
 {
-	return gpsDdToDmsFormat(longitude / 10000000.0f);
+	return longitude;
 }
 
-const float Mavlink::getGpsAltitude()
+const int32_t Mavlink::getGpsAltitude()
 {
-	return gpsAltitude / 100.0f;
+  // convert from millimeters to meters with rounding
+	return (gpsAltitude + 500) / 1000;
 }
 
 const float Mavlink::getGpsHdop()
@@ -113,7 +114,7 @@ const int Mavlink::getTemp2()
 
 const float Mavlink::getGpsGroundSpeed()
 {
-	return gpsGroundSpeed * 0.0194384f;
+	return gpsGroundSpeed;
 }
 
 const float Mavlink::getAltitude()
@@ -126,7 +127,7 @@ const int Mavlink::getTemp1()
 	return apmMode;
 }
 
-const float Mavlink::getCourse()
+const int Mavlink::getCourse()
 {
 	return course;
 }
@@ -277,7 +278,7 @@ bool Mavlink::parseMessage(char c)
         accZ = ToDeg(mavlink_msg_attitude_get_yaw(&msg));
 	      break;
       }
-      
+
       case MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT:
 			{
 				//nav_roll = mavlink_msg_nav_controller_output_get_nav_roll(&msg);

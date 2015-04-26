@@ -1,5 +1,5 @@
 /*
-	@author 	Nils H�gberg
+	@author 	Nils Högberg
 	@contact 	nils.hogberg@gmail.com
 
 	This program is free software: you can redistribute it and/or modify
@@ -58,16 +58,16 @@ public:
 	const float		getGpsHdop();
 
 	// IFrSkyDataProvider functions
-	const float		getGpsAltitude();
+	const int32_t getGpsAltitude();
 	const int		getTemp1();
 	const int		getEngineSpeed();
 	const int		getFuelLevel();
 	const int		getTemp2();
 	const float		getAltitude();
 	const float		getGpsGroundSpeed();
-	const float		getLongitud();
-	const float		getLatitude();
-	const float		getCourse();
+	const int32_t	getLongitude();
+	const int32_t	getLatitude();
+	const int 		getCourse();
 	const int		getYear();
 	const int		getDate();
 	const int		getTime();
@@ -95,7 +95,7 @@ private:
 	int				gpsStatus;
 	float			latitude;
 	float			longitude;
-	float			gpsAltitude;
+	int32_t 	gpsAltitude;
 	float			gpsHdop;
 	int				numberOfSatelites;
 	float			gpsGroundSpeed;
@@ -103,7 +103,7 @@ private:
 	float			altitude;
 	int				apmMode;
 	int				apmBaseMode;
-	float			course;
+	int 			course;
 	float			throttle;
 	float			accX;
 	float			accY;
