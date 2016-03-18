@@ -32,15 +32,15 @@ class FrSky
 public:
         FrSky();
         ~FrSky(void);
-        void sendFrSky5Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProvider);
-        void sendFrSky1Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProvider);
-        void sendFrSky05Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProvider);
-        void printValues(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProvider);
+        void sendFrSky5Hz(Stream& port, IFrSkyDataProvider* dataProvider);
+        void sendFrSky1Hz(Stream& port, IFrSkyDataProvider* dataProvider);
+        void sendFrSky05Hz(Stream& port, IFrSkyDataProvider* dataProvider);
+        void printValues(Stream& port, IFrSkyDataProvider* dataProvider);
 private:
         unsigned char        frskyBuffer[64];
         int                    bufferLength;
         unsigned char        addBufferData(const char id, IFrSkyDataProvider* dataProvider);
-        unsigned char        writeBuffer(const int length, SoftwareSerial* frSkySerial);
+        unsigned char        writeBuffer(const int length, Stream& port);
         byte                lsByte(int value);
         byte                msByte(int value);
 };

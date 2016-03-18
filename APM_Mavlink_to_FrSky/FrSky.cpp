@@ -26,7 +26,7 @@ FrSky::~FrSky(void)
 {
 }
 
-void FrSky::sendFrSky05Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProvider)
+void FrSky::sendFrSky05Hz(Stream& port, IFrSkyDataProvider* dataProvider)
 {
     // Date, Time
     /*
@@ -38,7 +38,7 @@ void FrSky::sendFrSky05Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataPr
 }
 
 // Send 1000 ms frame
-void FrSky::sendFrSky1Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProvider)
+void FrSky::sendFrSky1Hz(Stream& port, IFrSkyDataProvider* dataProvider)
 {
 
     // Course, Latitude, Longitude, Speed, Altitude (GPS), Fuel Level
@@ -49,12 +49,12 @@ void FrSky::sendFrSky1Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataPro
     bufferLength += addBufferData(GPSALT,dataProvider);
     bufferLength += addBufferData(FUEL, dataProvider);
     frskyBuffer[bufferLength++] = tail_value;
-    bufferLength = writeBuffer(bufferLength, serialPort);
+    bufferLength = writeBuffer(bufferLength, port);
 
 }
 
 // Send 200 ms frame
-void FrSky::sendFrSky5Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProvider)
+void FrSky::sendFrSky5Hz(Stream& port, IFrSkyDataProvider* dataProvider)
 {
 
     // Three-axis Acceleration Values, Altitude (variometer-0.01m), Tempature1, Temprature2, Voltage , Current & Voltage (Ampere Sensor) , RPM
@@ -68,7 +68,7 @@ void FrSky::sendFrSky5Hz(SoftwareSerial* serialPort, IFrSkyDataProvider* dataPro
     bufferLength += addBufferData(VFAS, dataProvider);
     bufferLength += addBufferData(RPM, dataProvider);
     frskyBuffer[bufferLength++] = tail_value;
-    bufferLength = writeBuffer(bufferLength, serialPort);
+    bufferLength = writeBuffer(bufferLength, port);
 
 }
 
@@ -319,7 +319,7 @@ unsigned char FrSky::addBufferData(const char id, IFrSkyDataProvider* dataProvid
   return 0;
 }
 
-unsigned char FrSky::writeBuffer(const int length, SoftwareSerial* frSkySerial)
+unsigned char FrSky::writeBuffer(const int length, Stream &frSkySerial)
 {
 
   int i = 0;
@@ -333,66 +333,29 @@ unsigned char FrSky::writeBuffer(const int length, SoftwareSerial* frSkySerial)
       {
         case header_value :
         {
-          frSkySerial->write((byte)0x5D);
-          frSkySerial->write((byte)0x3E);
+          frSkySerial.write((byte)0x5D);
+          frSkySerial.write((byte)0x3E);
           break;
         }
         case escape_value :
         {
-          frSkySerial->write((byte)0x5D);
-          frSkySerial->write((byte)0x3D);
+          frSkySerial.write((byte)0x5D);
+          frSkySerial.write((byte)0x3D);
           break;
         }
         default :
         {
-          frSkySerial->write((byte)frskyBuffer[i]);
+          frSkySerial.write((byte)frskyBuffer[i]);
         }
       }
     }
     else
     {
-      frSkySerial->write((byte)frskyBuffer[i]);
+      frSkySerial.write((byte)frskyBuffer[i]);
     }
 
     i++;
   }
 
   return 0;
-}
-
-void FrSky::printValues(SoftwareSerial* serialPort, IFrSkyDataProvider* dataProvider)
-{
-    serialPort->print("Voltage: ");
-    serialPort->print(dataProvider->getMainBatteryVoltage(), 2);
-    serialPort->print(" Current: ");
-    serialPort->print(dataProvider->getBatteryCurrent(), 2);
-    serialPort->print(" Fuel: ");
-    serialPort->print(dataProvider->getFuelLevel());
-    serialPort->print(" Latitude: ");
-    serialPort->print(dataProvider->getLatitude());
-    serialPort->print(" Longitude: ");
-    serialPort->print(dataProvider->getLongitude());
-    serialPort->print(" GPS Alt: ");
-    serialPort->print(dataProvider->getGpsAltitude(), 2);
-    //serialPort->print(" GPS hdop: ");
-    //serialPort->print(dataProvider->getGpsHdop(), 2);
-    serialPort->print(" GPS status + sats: ");
-    serialPort->print(dataProvider->getTemp2());
-    serialPort->print(" GPS speed: ");
-    serialPort->print(dataProvider->getGpsGroundSpeed(), 2);
-    serialPort->print(" Home alt: ");
-    serialPort->print(dataProvider->getAltitude(), 2);
-    serialPort->print(" Mode: ");
-    serialPort->print(dataProvider->getTemp1());
-    serialPort->print(" Course: ");
-    serialPort->print(dataProvider->getCourse());
-    serialPort->print(" RPM: ");
-    serialPort->print(dataProvider->getEngineSpeed());
-    serialPort->print(" AccX: ");
-    serialPort->print(dataProvider->getAccX(), 2);
-    serialPort->print(" AccY: ");
-    serialPort->print(dataProvider->getAccY(), 2);
-    serialPort->print(" AccZ: ");
-    serialPort->print(dataProvider->getAccZ(), 2);
-    serialPort->println("");
 }
