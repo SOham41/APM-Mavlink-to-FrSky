@@ -51,54 +51,57 @@ public:
     unsigned long    lastMAVBeat;
     const int        getGpsStatus();
     const float        getGpsHdop();
+    const int getNumberOfSatelites() { return numberOfSatelites; }
+    const uint8_t getMotorArmed() { return motorArmed; }
 
     // IFrSkyDataProvider functions
-    const int32_t getGpsAltitude();
+    const int32_t    getGpsAltitude();
     const int        getTemp1();
     const int        getEngineSpeed();
     const int        getFuelLevel();
     const int        getTemp2();
-    const float        getAltitude();
-    const float        getGpsGroundSpeed();
+    const float      getAltitude();
+    const float      getGpsGroundSpeed();
     const int32_t    getLongitude();
     const int32_t    getLatitude();
-    const int         getCourse();
+    const int        getCourse();
     const int        getYear();
     const int        getDate();
     const int        getTime();
-    const float        getAccX();
-    const float        getAccY();
-    const float        getAccZ();
-    const float        getBatteryCurrent();
-    const float        getMainBatteryVoltage();
+    const float      getAccX();
+    const float      getAccY();
+    const float      getAccZ();
+    const float      getBatteryCurrent();
+    const float      getMainBatteryVoltage();
 
 private:
     Stream  *debugPort;
     float            gpsDdToDmsFormat(float ddm);
-    bool            mavbeat;
-    unsigned int    apm_mav_type;
-    unsigned int    apm_mav_system;
-    unsigned int    apm_mav_component;
-    unsigned int    crlf_count;
-    int                packet_drops;
-    int                parse_error;
+    bool             mavbeat;
+    unsigned int     apm_mav_type;
+    unsigned int     apm_mav_system;
+    unsigned int     apm_mav_component;
+    unsigned int     crlf_count;
+    int              packet_drops;
+    int              parse_error;
 
     // Telemetry values
     FilteredValue    batteryVoltage;
     FilteredValue    current;
-    int                batteryRemaining;
-    int                gpsStatus;
+    int              batteryRemaining;
+    int              gpsStatus;
     float            latitude;
     float            longitude;
-    int32_t     gpsAltitude;
+    int32_t          gpsAltitude;
     float            gpsHdop;
-    int                numberOfSatelites;
+    int              numberOfSatelites;
     float            gpsGroundSpeed;
     float            gpsCourse;
     float            altitude;
-    int                apmMode;
-    int                apmBaseMode;
-    int             course;
+    int              apmMode;
+    int              apmBaseMode;
+    uint8_t          motorArmed;
+    int              course;
     float            throttle;
     float            accX;
     float            accY;

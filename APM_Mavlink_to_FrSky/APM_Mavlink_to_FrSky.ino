@@ -30,9 +30,11 @@
 #include <AP_Common.h>
 #include <AP_Param.h>
 #include <AP_Math.h>
+#include <Adafruit_NeoPixel.h>
 
 #define HEARTBEATLED 13
 #define HEARTBEATFREQ 500
+#define NUMPIXELS      16
 
 // Do not enable both at the same time
 //#define DEBUG
@@ -41,6 +43,8 @@
 Mavlink *dataProvider;
 FrSky *frSky;
 SoftwareSerial *frSkySerial;
+
+Adafruit_NeoPixel leds(NUMPIXELS, 5, NEO_GRB + NEO_KHZ800);
 
 #ifdef DEBUG
 SoftwareSerial *debugSerial;
@@ -66,6 +70,10 @@ void setup() {
     frskyDebugSerial = new SoftwareSerial(12, 11);
     frskyDebugSerial->begin(38400);
 #endif
+
+    leds.begin();
+    leds.setPixelColor(0, 0x001100);
+    leds.show();
 
     // FrSky data port pin 6 rx, 5 tx
     frSkySerial = new SoftwareSerial(2, 3, true);
@@ -118,6 +126,10 @@ void setup() {
     debugSerial->println(" bytes");
 #endif
 
+    //done, leds off
+    leds.setPixelColor(0, 0x000000);
+    leds.show();
+    leds.setBrightness(30);
 }
 
 void loop() {
@@ -139,6 +151,37 @@ void loop() {
 
     processData();
     updateHeartbeat();
+
+    uint32_t time = millis();
+    static uint32_t lastLed = 0;
+    if ((time - lastLed) > 50) {
+        uint16_t j = (millis() >> 3) % (256 * 5);
+        for (uint16_t i=0; i < leds.numPixels(); i++) {
+            uint32_t c = Wheel(((i * 256 / leds.numPixels()) + j) & 255);
+            if (dataProvider->getGpsStatus() < 2)
+                c &= 0xFF0000; // only show red
+            else if (dataProvider->getMotorArmed())
+                c &= 0x0000FF; // only blue
+            leds.setPixelColor(i, c);
+        }
+        leds.show();
+        lastLed = time;
+    }
+}
+
+// Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+   return leds.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  } else if(WheelPos < 170) {
+    WheelPos -= 85;
+   return leds.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  } else {
+   WheelPos -= 170;
+   return leds.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+  }
 }
 
 void updateHeartbeat()

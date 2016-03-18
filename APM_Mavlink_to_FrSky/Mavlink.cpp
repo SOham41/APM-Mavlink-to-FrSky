@@ -217,11 +217,9 @@ bool Mavlink::parseMessage(char c)
           apm_mav_system    = msg.sysid;
           apm_mav_component = msg.compid;
           apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);
-          apmMode              = (unsigned int)mavlink_msg_heartbeat_get_custom_mode(&msg);
-              apmBaseMode          = mavlink_msg_heartbeat_get_base_mode(&msg);
-
-          //if(getBit(base_mode,7)) motor_armed = 1;
-          //else motor_armed = 0;
+          apmMode           = (unsigned int)mavlink_msg_heartbeat_get_custom_mode(&msg);
+          apmBaseMode       = mavlink_msg_heartbeat_get_base_mode(&msg);
+          motorArmed        = (apmBaseMode >> 7) && 1;
 
           //osd_nav_mode = 0;
           lastMAVBeat = millis();
