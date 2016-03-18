@@ -68,7 +68,7 @@ void setup() {
 #endif
 
     // FrSky data port pin 6 rx, 5 tx
-    frSkySerial = new SoftwareSerial(6, 5, true);
+    frSkySerial = new SoftwareSerial(2, 3, true);
     frSkySerial->begin(9600);
     // Incoming data from APM
     Serial.begin(57600);
@@ -164,19 +164,19 @@ void sendFrSkyData()
 
     if (counter >= 25)             // Send 5000 ms frame
     {
-        frSky->sendFrSky05Hz(frSkySerial, dataProvider);
+        frSky->sendFrSky05Hz(*frSkySerial, dataProvider);
         counter = 0;
     }
     else if ((counter % 5) == 0) // Send 1000 ms frame
     {
-        frSky->sendFrSky1Hz(frSkySerial, dataProvider);
+        frSky->sendFrSky1Hz(*frSkySerial, dataProvider);
 #ifdef DEBUG
         frSky->printValues(debugSerial, dataProvider);
 #endif
     }
     else                         // Send 200 ms frame
     {
-        frSky->sendFrSky5Hz(frSkySerial, dataProvider);
+        frSky->sendFrSky5Hz(*frSkySerial, dataProvider);
     }
 }
 

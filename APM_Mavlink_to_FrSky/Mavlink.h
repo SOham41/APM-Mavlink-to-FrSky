@@ -21,6 +21,7 @@
 #include "IFrSkyDataProvider.h"
 #include "SoftwareSerial.h"
 #include <GCS_MAVLink.h>
+#include <Stream.h>
 
 class FilteredValue
 {
@@ -72,7 +73,7 @@ public:
     const float        getMainBatteryVoltage();
 
 private:
-    Serial  *debugPort;
+    Stream  *debugPort;
     float            gpsDdToDmsFormat(float ddm);
     bool            mavbeat;
     unsigned int    apm_mav_type;
