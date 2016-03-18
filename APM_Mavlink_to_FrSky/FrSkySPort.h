@@ -8,11 +8,11 @@
 class FrSkySPort
 {
 public:
-	FrSkySPort(uint8_t pinTx);
+    FrSkySPort(uint8_t pinTx);
     void setup();
     bool timeToSend();
     void sendData(IFrSkyDataProvider* dataProvider);
-    
+
 private:
     uint8_t _pinTx;
     void sendValue(uint16_t id, uint32_t value) ;

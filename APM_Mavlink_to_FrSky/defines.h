@@ -1,19 +1,19 @@
 /*
-	@author 	Nils Högberg
-	@contact 	nils.hogberg@gmail.com
+    @author     Nils Högberg
+    @contact     nils.hogberg@gmail.com
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef defines_h
@@ -29,7 +29,7 @@ typedef unsigned char byte;
 #define tail_value     0x5e
 #define escape_value   0x5d
 #define decimal        0x8
-      
+
 #define GPSALT         0x1
 #define TEMP1          0x2
 #define RPM            0x3
@@ -61,7 +61,7 @@ typedef unsigned char byte;
 0x04  Fuel Level            %     uint16
 0x05  Temperature2          C     int16
 0x06  Cell voltage          V     ?
-0x07  
+0x07
 0x08
 0x09  GPS Altitude decimal  .M    int16
 0x0A
@@ -70,7 +70,7 @@ typedef unsigned char byte;
 0x0D
 0x0E
 0x0F
-0x10   Altitude		    M     int16
+0x10   Altitude            M     int16
 0x11   GPS Speed            Knots uint16
 0x12   GPS Longitude        ddmm
 0x13   GPS Latitude         ddmm
@@ -89,7 +89,7 @@ typedef unsigned char byte;
 0x20
 0x21   Altitude decimal
 0x22   E/W
-0x23   N/S            
+0x23   N/S
 0x24   Acc-X          G   int16
 0x25   Acc-Y          G   int16
 0x26   Acc-Z          G   int16

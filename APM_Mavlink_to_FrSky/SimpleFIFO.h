@@ -2,10 +2,10 @@
 #define SimpleFIFO_h
 /*
 ||
-|| @file 		SimpleFIFO.h
-|| @version 	1.2
-|| @author 	Alexander Brevig
-|| @contact 	alexanderbrevig@gmail.com
+|| @file         SimpleFIFO.h
+|| @version     1.2
+|| @author     Alexander Brevig
+|| @contact     alexanderbrevig@gmail.com
 ||
 || @description
 || | A simple FIFO class, mostly for primitive types but can be used with classes if assignment to int is allowed
@@ -33,57 +33,57 @@
 template<typename T, int rawSize>
 class SimpleFIFO {
 public:
-	const char size;				//speculative feature, in case it's needed
+    const char size;                //speculative feature, in case it's needed
 
-	SimpleFIFO();
+    SimpleFIFO();
 
-	T dequeue();				//get next element
-	bool enqueue( T element );	//add an element
-	T peek() const;				//get the next element without releasing it from the FIFO
-	void flush();				//[1.1] reset to default state 
+    T dequeue();                //get next element
+    bool enqueue( T element );    //add an element
+    T peek() const;                //get the next element without releasing it from the FIFO
+    void flush();                //[1.1] reset to default state
 
-	//how many elements are currently in the FIFO?
-	char count() { return numberOfElements; }
+    //how many elements are currently in the FIFO?
+    char count() { return numberOfElements; }
 
 private:
 #ifndef SimpleFIFO_NONVOLATILE
-	volatile char numberOfElements;
-	volatile char nextIn;
-	volatile char nextOut;
-	volatile T raw[rawSize];
+    volatile char numberOfElements;
+    volatile char nextIn;
+    volatile char nextOut;
+    volatile T raw[rawSize];
 #else
-	char numberOfElements;
-	char nextIn;
-	char nextOut;
-	T raw[rawSize];
+    char numberOfElements;
+    char nextIn;
+    char nextOut;
+    T raw[rawSize];
 #endif
 };
 
 template<typename T, int rawSize>
 SimpleFIFO<T,rawSize>::SimpleFIFO() : size(rawSize) {
-	flush();
+    flush();
 }
 template<typename T, int rawSize>
 bool SimpleFIFO<T,rawSize>::enqueue( T element ) {
-	if ( count() >= rawSize ) { return false; }
-	numberOfElements++;
-	nextIn %= size;
-	raw[nextIn] = element;
-	nextIn++; //advance to next index
-	return true;
+    if ( count() >= rawSize ) { return false; }
+    numberOfElements++;
+    nextIn %= size;
+    raw[nextIn] = element;
+    nextIn++; //advance to next index
+    return true;
 }
 template<typename T, int rawSize>
 T SimpleFIFO<T,rawSize>::dequeue() {
-	numberOfElements--;
-	nextOut %= size;
-	return raw[ nextOut++];
+    numberOfElements--;
+    nextOut %= size;
+    return raw[ nextOut++];
 }
 template<typename T, int rawSize>
 T SimpleFIFO<T,rawSize>::peek() const {
-	return raw[ nextOut % size];
+    return raw[ nextOut % size];
 }
 template<typename T, int rawSize>
 void SimpleFIFO<T,rawSize>::flush() {
-	nextIn = nextOut = numberOfElements = 0;
+    nextIn = nextOut = numberOfElements = 0;
 }
 #endif
