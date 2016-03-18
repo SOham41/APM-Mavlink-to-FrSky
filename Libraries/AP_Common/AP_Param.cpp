@@ -13,7 +13,6 @@
 /// @brief  The AP variable store.
 
 
-#include <FastSerial.h>
 #include <AP_Common.h>
 #include <AP_Math.h>
 
@@ -874,16 +873,24 @@ void AP_Param::show_all(void)
 
         switch (type) {
         case AP_PARAM_INT8:
-            Serial.printf_P(PSTR("%s: %d\n"), s, (int)((AP_Int8 *)ap)->get());
+            Serial.print(s);
+            Serial.print(": ");
+            Serial.println((int)((AP_Int8 *)ap)->get());
             break;
         case AP_PARAM_INT16:
-            Serial.printf_P(PSTR("%s: %d\n"), s, (int)((AP_Int16 *)ap)->get());
+            Serial.print(s);
+            Serial.print(": ");
+            Serial.println((int)((AP_Int16 *)ap)->get());
             break;
         case AP_PARAM_INT32:
-            Serial.printf_P(PSTR("%s: %ld\n"), s, (long)((AP_Int32 *)ap)->get());
+            Serial.print(s);
+            Serial.print(": ");
+            Serial.println((long)((AP_Int32 *)ap)->get());
             break;
         case AP_PARAM_FLOAT:
-            Serial.printf_P(PSTR("%s: %f\n"), s, ((AP_Float *)ap)->get());
+            Serial.print(s);
+            Serial.print(": ");
+            Serial.println(((AP_Float *)ap)->get());
             break;
         default:
             break;

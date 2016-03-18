@@ -23,7 +23,6 @@
 
 #include <SoftwareSerial.h>
 #include <FlexiTimer2.h>
-#include <FastSerial.h>
 #include "Mavlink.h"
 #include "FrSky.h"
 #include "SimpleFIFO.h"
@@ -40,7 +39,6 @@
 //#define DEBUGFRSKY
 
 Mavlink *dataProvider;
-FastSerialPort0(Serial);
 FrSky *frSky;
 SoftwareSerial *frSkySerial;
 

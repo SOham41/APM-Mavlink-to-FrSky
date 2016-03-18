@@ -6,11 +6,11 @@
 // your option) any later version.
 //
 
-/// @file		AP_Common.cpp
-/// @brief		Common utility routines for the ArduPilot libraries.
+/// @file        AP_Common.cpp
+/// @brief        Common utility routines for the ArduPilot libraries.
 ///
-/// @note		Exercise restraint adding code here; everything in this
-///				library will be linked with any sketch using it.
+/// @note        Exercise restraint adding code here; everything in this
+///                library will be linked with any sketch using it.
 ///
 
 #include "AP_Common.h"

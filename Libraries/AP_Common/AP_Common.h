@@ -7,9 +7,9 @@
 //
 
 ///
-/// @file 		AP_Common.h
-/// @brief		Common definitions and utility routines for the ArduPilot
-///				libraries.
+/// @file         AP_Common.h
+/// @brief        Common definitions and utility routines for the ArduPilot
+///                libraries.
 ///
 
 #ifndef _AP_COMMON_H
@@ -17,15 +17,15 @@
 
 // Get the common arduino functions
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
+    #include "Arduino.h"
 #else
-	#include "wiring.h"
+    #include "wiring.h"
 #endif
 // ... and remove some of their stupid macros
 #undef round
 #undef abs
 
-// prog_char_t is used as a wrapper type for char, which is
+// prog_char_t is used as a wrapper type for prog_char, which is
 // a character stored in flash. By using this wrapper type we can
 // auto-detect at compile time if a call to a string function is using
 // a flash-stored string or not
@@ -34,7 +34,7 @@ typedef struct {
 } prog_char_t;
 
 #include <stdint.h>
-#include "include/menu.h"		/// simple menu subsystem
+#include "include/menu.h"        /// simple menu subsystem
 #include "c++.h" // c++ additions
 //#include "AP_Vector.h"
 //#include "AP_Loop.h"
@@ -47,7 +47,7 @@ typedef struct {
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @name	Warning control
+/// @name    Warning control
 //@{
 //
 // Turn on/off warnings of interest.
@@ -75,8 +75,8 @@ typedef struct {
 //
 #if PRINTF_FORMAT_WARNING_DEBUG
 # undef PSTR
-# define PSTR(_x)		_x		// help the compiler with printf_P
-# define float double			// silence spurious format warnings for %f
+# define PSTR(_x)        _x        // help the compiler with printf_P
+# define float double            // silence spurious format warnings for %f
 #else
 // This is a workaround for GCC bug c++/34734.
 //
@@ -94,7 +94,7 @@ typedef struct {
 #endif
 
 # undef PSTR
-# define PSTR(s) (__extension__({static const char __c[] PROGMEM = (s); \
+# define PSTR(s) (__extension__({static char __c[] PROGMEM = (s); \
                 (prog_char_t *)&__c[0];}))
 #endif
 
@@ -123,24 +123,24 @@ static inline void *memcpy_P(void *dest, const prog_char_t *src, size_t n)
     return memcpy_P(dest, (const char *)src, n);
 }
 
-// strlcat_P() in AVR libc seems to be broken 
+// strlcat_P() in AVR libc seems to be broken
 static inline size_t strlcat_P(char *d, const prog_char_t *s, size_t bufsize)
 {
-	size_t len1 = strlen(d);
-	size_t len2 = strlen_P(s);
-	size_t ret = len1 + len2;
-    
-	if (len1+len2 >= bufsize) {
-		if (bufsize < (len1+1)) {
-			return ret;
-		}
-		len2 = bufsize - (len1+1);
-	}
-	if (len2 > 0) {
-		memcpy_P(d+len1, s, len2);
-		d[len1+len2] = 0;
-	}
-	return ret;
+    size_t len1 = strlen(d);
+    size_t len2 = strlen_P(s);
+    size_t ret = len1 + len2;
+
+    if (len1+len2 >= bufsize) {
+        if (bufsize < (len1+1)) {
+            return ret;
+        }
+        len2 = bufsize - (len1+1);
+    }
+    if (len2 > 0) {
+        memcpy_P(d+len1, s, len2);
+        d[len1+len2] = 0;
+    }
+    return ret;
 }
 
 static inline char *strncpy_P(char *buffer, const prog_char_t *pstr, size_t buffer_size)
@@ -180,41 +180,41 @@ static inline uintptr_t pgm_read_pointer(const void *s)
 /// when passing PROGMEM strings to static object constructors because the PSTR
 /// hack can't be used at global scope.
 ///
-#define PROGMEM_STRING(_v, _s)	static const char _v[] PROGMEM = _s
+#define PROGMEM_STRING(_v, _s)    static const char _v[] PROGMEM = _s
 
-#define ToRad(x) (x*0.01745329252)	// *pi/180
-#define ToDeg(x) (x*57.2957795131)	// *180/pi
+#define ToRad(x) (x*0.01745329252)    // *pi/180
+#define ToDeg(x) (x*57.2957795131)    // *180/pi
 // @}
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @name	Types
+/// @name    Types
 ///
 /// Data structures and types used throughout the libraries and applications. 0 = default
-/// bit 0: Altitude is stored 			    0: Absolute,	1: Relative
-/// bit 1: Chnage Alt between WP 		    0: Gradually,	1: ASAP
+/// bit 0: Altitude is stored                 0: Absolute,    1: Relative
+/// bit 1: Chnage Alt between WP             0: Gradually,    1: ASAP
 /// bit 2:
 /// bit 3: Req.to hit WP.alt to continue    0: No,          1: Yes
-/// bit 4: Relative to Home					0: No, 			1: Yes
+/// bit 4: Relative to Home                    0: No,             1: Yes
 /// bit 5:
 /// bit 6:
-/// bit 7: Move to next Command 		    0: YES, 		1: Loiter until commanded
+/// bit 7: Move to next Command             0: YES,         1: Loiter until commanded
 
 //@{
 
 struct Location {
-    uint8_t		id;					///< command id
-    uint8_t		options;			///< options bitmask (1<<0 = relative altitude)
-    uint8_t		p1;					///< param 1
-    int32_t		alt;				///< param 2 - Altitude in centimeters (meters * 100)
-    int32_t		lat;				///< param 3 - Lattitude * 10**7
-    int32_t		lng;				///< param 4 - Longitude * 10**7
+    uint8_t        id;                    ///< command id
+    uint8_t        options;            ///< options bitmask (1<<0 = relative altitude)
+    uint8_t        p1;                    ///< param 1
+    int32_t        alt;                ///< param 2 - Altitude in centimeters (meters * 100)
+    int32_t        lat;                ///< param 3 - Lattitude * 10**7
+    int32_t        lng;                ///< param 4 - Longitude * 10**7
 };
 
 //@}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// @name	Conversions
+/// @name    Conversions
 ///
 /// Conversion macros and factors.
 ///
@@ -222,8 +222,8 @@ struct Location {
 
 /// XXX this should probably be replaced with radians()/degrees(), but their
 /// inclusion in wiring.h makes doing that here difficult.
-#define ToDeg(x) (x*57.2957795131)	// *180/pi
-#define ToRad(x) (x*0.01745329252)	// *pi/180
+#define ToDeg(x) (x*57.2957795131)    // *180/pi
+#define ToRad(x) (x*0.01745329252)    // *pi/180
 
 //@}
 
@@ -236,20 +236,20 @@ struct Location {
 
 /*  Product IDs for all supported products follow */
 
-#define AP_PRODUCT_ID_NONE 			0x00 	// Hardware in the loop
-#define AP_PRODUCT_ID_APM1_1280 	0x01 	// APM1 with 1280 CPUs
-#define AP_PRODUCT_ID_APM1_2560 	0x02 	// APM1 with 2560 CPUs
-#define AP_PRODUCT_ID_SITL		 	0x03 	// Software in the loop
-#define AP_PRODUCT_ID_APM2ES_REV_C4 0x14 	// APM2 with MPU6000ES_REV_C4
-#define AP_PRODUCT_ID_APM2ES_REV_C5	0x15 	// APM2 with MPU6000ES_REV_C5
-#define AP_PRODUCT_ID_APM2ES_REV_D6	0x16	// APM2 with MPU6000ES_REV_D6
-#define AP_PRODUCT_ID_APM2ES_REV_D7	0x17	// APM2 with MPU6000ES_REV_D7
-#define AP_PRODUCT_ID_APM2ES_REV_D8	0x18	// APM2 with MPU6000ES_REV_D8	
-#define AP_PRODUCT_ID_APM2_REV_C4	0x54	// APM2 with MPU6000_REV_C4 	
-#define AP_PRODUCT_ID_APM2_REV_C5	0x55	// APM2 with MPU6000_REV_C5 	
-#define AP_PRODUCT_ID_APM2_REV_D6	0x56	// APM2 with MPU6000_REV_D6 		
-#define AP_PRODUCT_ID_APM2_REV_D7	0x57	// APM2 with MPU6000_REV_D7 	
-#define AP_PRODUCT_ID_APM2_REV_D8	0x58	// APM2 with MPU6000_REV_D8 	
-#define AP_PRODUCT_ID_APM2_REV_D9	0x59	// APM2 with MPU6000_REV_D9 	
+#define AP_PRODUCT_ID_NONE             0x00     // Hardware in the loop
+#define AP_PRODUCT_ID_APM1_1280     0x01     // APM1 with 1280 CPUs
+#define AP_PRODUCT_ID_APM1_2560     0x02     // APM1 with 2560 CPUs
+#define AP_PRODUCT_ID_SITL             0x03     // Software in the loop
+#define AP_PRODUCT_ID_APM2ES_REV_C4 0x14     // APM2 with MPU6000ES_REV_C4
+#define AP_PRODUCT_ID_APM2ES_REV_C5    0x15     // APM2 with MPU6000ES_REV_C5
+#define AP_PRODUCT_ID_APM2ES_REV_D6    0x16    // APM2 with MPU6000ES_REV_D6
+#define AP_PRODUCT_ID_APM2ES_REV_D7    0x17    // APM2 with MPU6000ES_REV_D7
+#define AP_PRODUCT_ID_APM2ES_REV_D8    0x18    // APM2 with MPU6000ES_REV_D8
+#define AP_PRODUCT_ID_APM2_REV_C4    0x54    // APM2 with MPU6000_REV_C4
+#define AP_PRODUCT_ID_APM2_REV_C5    0x55    // APM2 with MPU6000_REV_C5
+#define AP_PRODUCT_ID_APM2_REV_D6    0x56    // APM2 with MPU6000_REV_D6
+#define AP_PRODUCT_ID_APM2_REV_D7    0x57    // APM2 with MPU6000_REV_D7
+#define AP_PRODUCT_ID_APM2_REV_D8    0x58    // APM2 with MPU6000_REV_D8
+#define AP_PRODUCT_ID_APM2_REV_D9    0x59    // APM2 with MPU6000_REV_D9
 
 #endif // _AP_COMMON_H

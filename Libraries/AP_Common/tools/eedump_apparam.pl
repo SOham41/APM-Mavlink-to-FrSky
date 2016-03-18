@@ -9,13 +9,13 @@ open(IN,$file) || die print "Failed to open file: $file : $!";
 read(IN,$buffer,1);
 read(IN,$buffer2,1);
 if (ord($buffer2) != 0x41 && ord($buffer) != 0x50) {
-	print "bad header ". $buffer ." ".$buffer2. "\n";
-	exit;
+    print "bad header ". $buffer ." ".$buffer2. "\n";
+    exit;
 }
 read(IN,$buffer,1);
 if (ord($buffer) != 5) {
-	print "bad version";
-	exit;
+    print "bad version";
+    exit;
 }
 
 # spare
@@ -23,13 +23,13 @@ read(IN,$buffer,1);
 
 $a = 0;
 
-while (read(IN,$buffer,1)) {	
-	$pos = (tell(IN) - 1);
+while (read(IN,$buffer,1)) {    
+    $pos = (tell(IN) - 1);
 
-	if (ord($buffer) == 0xff) {
-		printf("end sentinel at %u\n", $pos);
-		last;
-	}
+    if (ord($buffer) == 0xff) {
+        printf("end sentinel at %u\n", $pos);
+        last;
+    }
     
     read(IN,$buffer2,1);
     read(IN,$buffer3,1);
@@ -66,13 +66,13 @@ while (read(IN,$buffer,1)) {
         $size = 0;
     }
 
-	printf("%04x: type %u ($type) key %u group_element %u size %d\n ", $pos, ord($buffer3),ord($buffer),ord($buffer2), $size);
+    printf("%04x: type %u ($type) key %u group_element %u size %d\n ", $pos, ord($buffer3),ord($buffer),ord($buffer2), $size);
 
-	for ($i = 0; $i < ($size); $i++) {
-		read(IN,$buffer,1);
-		printf(" %02x", ord($buffer));
-	}
-	print "\n";
+    for ($i = 0; $i < ($size); $i++) {
+        read(IN,$buffer,1);
+        printf(" %02x", ord($buffer));
+    }
+    print "\n";
 }
 
 close IN;

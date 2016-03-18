@@ -10,6 +10,4 @@
 /// @brief  Useful functions compatible with the menu system for
 ///         managing AP_Var variables.
 
-#include <FastSerial.h>
 #include <AP_Common.h>
-

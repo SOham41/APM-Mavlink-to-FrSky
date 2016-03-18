@@ -6,9 +6,9 @@
 // your option) any later version.
 //
 
-/// @file	AP_Param.h
-/// @brief	A system for managing and storing variables that are of
-///			general interest to the system.
+/// @file    AP_Param.h
+/// @brief    A system for managing and storing variables that are of
+///            general interest to the system.
 
 #ifndef AP_PARAM_H
 #define AP_PARAM_H
@@ -38,7 +38,7 @@
 #define AP_NESTEDGROUPINFO(class, idx) { AP_PARAM_GROUP, idx, "", 0, class::var_info }
 #endif
 
-#define AP_GROUPEND	{ AP_PARAM_NONE, 0xFF, "" }
+#define AP_GROUPEND    { AP_PARAM_NONE, 0xFF, "" }
 
 enum ap_var_type {
     AP_PARAM_NONE    = 0,
@@ -99,8 +99,8 @@ public:
     /// Note that if the combination of names is larger than the buffer, the
     /// result in the buffer will be truncated.
     ///
-    /// @param	buffer			The destination buffer
-    /// @param	bufferSize		Total size of the destination buffer.
+    /// @param    buffer            The destination buffer
+    /// @param    bufferSize        Total size of the destination buffer.
     ///
     void copy_name(char *buffer, size_t bufferSize, bool force_scalar=false);
 
@@ -235,8 +235,8 @@ private:
 /// Objects of this type have a value, and can be treated in many ways as though they
 /// were the value.
 ///
-/// @tparam T			The scalar type of the variable
-/// @tparam PT			The AP_PARAM_* type
+/// @tparam T            The scalar type of the variable
+/// @tparam PT            The AP_PARAM_* type
 ///
 template<typename T, ap_var_type PT>
 class AP_ParamT : public AP_Param
@@ -325,8 +325,8 @@ protected:
 /// Objects of this type have a value, and can be treated in many ways as though they
 /// were the value.
 ///
-/// @tparam T			The scalar type of the variable
-/// @tparam PT			AP_PARAM_* type
+/// @tparam T            The scalar type of the variable
+/// @tparam PT            AP_PARAM_* type
 ///
 template<typename T, ap_var_type PT>
 class AP_ParamV : public AP_Param

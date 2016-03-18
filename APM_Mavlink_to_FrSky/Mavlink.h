@@ -20,13 +20,7 @@
 
 #include "IFrSkyDataProvider.h"
 #include "SoftwareSerial.h"
-#include <FastSerial.h>
-//#include <mavlink.h>
 #include <GCS_MAVLink.h>
-//#include <../Libraries/GCS_MAVLink/GCS_MAVLink.h>
-//#include "../GCS_MAVLink/include/mavlink/v1.0/mavlink_types.h"
-//#include "../GCS_MAVLink/include/mavlink/v1.0/ardupilotmega/mavlink.h"
-
 
 class FilteredValue
 {
@@ -46,7 +40,7 @@ public:
 class Mavlink :    public IFrSkyDataProvider
 {
 public:
-    Mavlink(BetterStream* port);
+    Mavlink(Stream* port);
     ~Mavlink(void);
     bool            parseMessage(char c);
     void            makeRateRequest();
@@ -78,7 +72,7 @@ public:
     const float        getMainBatteryVoltage();
 
 private:
-    SoftwareSerial  *debugPort;
+    Serial  *debugPort;
     float            gpsDdToDmsFormat(float ddm);
     bool            mavbeat;
     unsigned int    apm_mav_type;

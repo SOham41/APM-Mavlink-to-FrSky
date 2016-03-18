@@ -6,10 +6,10 @@
 // your option) any later version.
 //
 
-/// @file	AP_MetaClass.cpp
-///			Abstract meta-class from which other AP classes may inherit.
-///			Provides type introspection and some basic protocols that can
-///			be implemented by subclasses.
+/// @file    AP_MetaClass.cpp
+///            Abstract meta-class from which other AP classes may inherit.
+///            Provides type introspection and some basic protocols that can
+///            be implemented by subclasses.
 
 #include "AP_MetaClass.h"
 

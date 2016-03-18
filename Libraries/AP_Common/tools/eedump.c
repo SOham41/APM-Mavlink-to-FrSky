@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-uint8_t	eeprom[0x1000];
+uint8_t    eeprom[0x1000];
 
 #pragma pack(1)
 
@@ -36,11 +36,11 @@ fail(const char *why)
 int
 main(int argc, char *argv[])
 {
-  FILE			*fp;
-  struct EEPROM_header	*header;
-  struct Var_header	*var;
-  unsigned		index;
-  unsigned		i;
+  FILE            *fp;
+  struct EEPROM_header    *header;
+  struct Var_header    *var;
+  unsigned        index;
+  unsigned        i;
 
   if (argc != 2) {
     fail("missing EEPROM file name");

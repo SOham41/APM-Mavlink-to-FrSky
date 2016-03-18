@@ -20,16 +20,9 @@
 
 #include "Mavlink.h"
 
-//#include "include/mavlink/v1.0/mavlink_types.h"
-//#include "include/mavlink/v1.0/ardupilotmega/mavlink.h"
-
-//#include "../Libraries/GCS_MAVLink/GCS_MAVLink.h"
-//#include "../GCS_MAVLink/include/mavlink/v1.0/mavlink_types.h"
-//#include "../GCS_MAVLink/include/mavlink/v1.0/ardupilotmega/mavlink.h"
 
 
-
-Mavlink::Mavlink(BetterStream* port)
+Mavlink::Mavlink(Stream* port)
   : batteryVoltage(0.7),
   current(0.7)
 {

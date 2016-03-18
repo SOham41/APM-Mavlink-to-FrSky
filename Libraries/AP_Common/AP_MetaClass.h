@@ -6,8 +6,8 @@
 // your option) any later version.
 //
 
-/// @file	AP_Meta_class.h
-///	@brief	An abstract base class from which other classes can inherit.
+/// @file    AP_Meta_class.h
+///    @brief    An abstract base class from which other classes can inherit.
 ///
 /// This abstract base class declares and implements functions that are
 /// useful to code that wants to know things about a class, or to operate
@@ -20,10 +20,10 @@
 #ifndef AP_META_CLASS_H
 #define AP_META_CLASS_H
 
-#include <stddef.h>			// for size_t
+#include <stddef.h>            // for size_t
 #include <inttypes.h>
 
-#include <avr/io.h>			// for RAMEND
+#include <avr/io.h>            // for RAMEND
 ///
 /// Basic meta-class from which other AP_* classes can derive.
 ///
@@ -66,7 +66,7 @@ public:
     /// type is to construct an object at runtime.  To cache the type ID
     /// of a class Foo, see the templated version below:
     ///
-    /// @return					A type-unique value for this.
+    /// @return                    A type-unique value for this.
     ///
     Type_id meta_type_id(void) const {
         return *(Type_id *)this;
@@ -105,7 +105,7 @@ public:
     /// The value contains the 16-bit type ID of the actual class and
     /// a pointer to the class instance.
     ///
-    /// @return					An opaque handle
+    /// @return                    An opaque handle
     ///
     Meta_handle meta_get_handle(void) const {
         return ((Meta_handle)meta_type_id() << 16) | (uintptr_t)this;
@@ -119,9 +119,9 @@ public:
     /// The handle is considered good if the pointer is valid and the object
     /// it points to has a type ID that matches the ID in the handle.
     ///
-    /// @param	handle			A possible AP_Meta_class handle
-    /// @return					The instance pointer if the handle is good,
-    ///							or NULL if it is bad.
+    /// @param    handle            A possible AP_Meta_class handle
+    /// @return                    The instance pointer if the handle is good,
+    ///                            or NULL if it is bad.
     ///
     static AP_Meta_class *meta_validate_handle(Meta_handle handle) {
         AP_Meta_class *candidate = (AP_Meta_class *)(handle & 0xffff); // extract object pointer
@@ -164,10 +164,10 @@ public:
     /// similar contents, or to non-AP_Meta_class derived classes with no virtual functions
     /// this function may return true.
     ///
-    /// @param	p1				The first object to be compared.
-    /// @param	p2				The second object to be compared.
-    /// @return					True if the two objects are of the same class, false
-    ///							if they are not.
+    /// @param    p1                The first object to be compared.
+    /// @param    p2                The second object to be compared.
+    /// @return                    True if the two objects are of the same class, false
+    ///                            if they are not.
     ///
     static bool meta_type_equivalent(AP_Meta_class *p1, AP_Meta_class *p2) {
         return p1->meta_type_id() == p2->meta_type_id();
@@ -182,12 +182,12 @@ public:
     /// This should be used with caution, as T's default constructor and
     /// destructor will be run, possibly introducing undesired side-effects.
     ///
-    /// @todo	Consider whether we should make it difficult to have a default constructor
-    ///			with appreciable side-effects.
+    /// @todo    Consider whether we should make it difficult to have a default constructor
+    ///            with appreciable side-effects.
     ///
-    /// @param	p				An AP_Meta_class subclass that may be of type T.
-    /// @tparam	T		        The name of a type to which p is to be cast.
-    /// @return					NULL if p is not of precisely type T, otherwise p cast to T.
+    /// @param    p                An AP_Meta_class subclass that may be of type T.
+    /// @tparam    T                The name of a type to which p is to be cast.
+    /// @return                    NULL if p is not of precisely type T, otherwise p cast to T.
     ///
     template<typename T>
     static T *meta_cast(AP_Meta_class *p) {
@@ -228,11 +228,11 @@ public:
     /// Classes that wrap variables should define the format of their serialiaed data
     /// so that external consumers can reliably interpret it.
     ///
-    /// @param	buf				Buffer into which serialised data should be placed.
-    /// @param	bufSize			The size of the buffer provided.
-    /// @return					The size of the serialised data, even if that data would
-    ///							have overflowed the buffer.  If the return value is zero,
-    ///							the class does not support serialization.
+    /// @param    buf                Buffer into which serialised data should be placed.
+    /// @param    bufSize            The size of the buffer provided.
+    /// @return                    The size of the serialised data, even if that data would
+    ///                            have overflowed the buffer.  If the return value is zero,
+    ///                            the class does not support serialization.
     ///
     virtual size_t serialize(void *buf, size_t bufSize) const;
 
@@ -245,13 +245,13 @@ public:
     /// Classes that wrap variables should define the format of their serialized data so
     /// that external providers can reliably encode it.
     ///
-    /// @param	buf				Buffer containing serialized data.
-    /// @param	bufSize			The size of the buffer.
-    /// @return					The number of bytes from the buffer that would be consumed
-    ///							unserializing the data.  If the value is less than or equal
-    ///							to bufSize, unserialization was successful.  If the return
-    ///							value is zero the class does not support unserialisation or
-    ///							the data in the buffer is invalid.
+    /// @param    buf                Buffer containing serialized data.
+    /// @param    bufSize            The size of the buffer.
+    /// @return                    The number of bytes from the buffer that would be consumed
+    ///                            unserializing the data.  If the value is less than or equal
+    ///                            to bufSize, unserialization was successful.  If the return
+    ///                            value is zero the class does not support unserialisation or
+    ///                            the data in the buffer is invalid.
     ///
     virtual size_t unserialize(void *buf, size_t bufSize);
 };

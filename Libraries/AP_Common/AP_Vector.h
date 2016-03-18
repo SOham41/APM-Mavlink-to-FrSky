@@ -19,13 +19,12 @@
 #ifndef Vector_H
 #define Vector_H
 
-#include "../FastSerial/BetterStream.h"
 #include <stdlib.h>
 #include <inttypes.h>
 #if defined(ARDUINO) && ARDUINO >= 100
-	#include "Arduino.h"
+    #include "Arduino.h"
 #else
-	#include <WProgram.h>
+    #include <WProgram.h>
 #endif
 
 #ifdef ASSERT
