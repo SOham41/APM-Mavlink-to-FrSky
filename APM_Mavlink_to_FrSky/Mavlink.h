@@ -41,8 +41,10 @@ public:
 class Mavlink :    public IFrSkyDataProvider
 {
 public:
-    Mavlink(Stream* port);
+    Mavlink(Stream* port, Stream* debug = NULL);
     ~Mavlink(void);
+
+    Stream& getChannel() const;
     bool            parseMessage(char c);
     void            makeRateRequest();
     bool            enable_mav_request;
@@ -75,7 +77,7 @@ public:
     const float      getMainBatteryVoltage();
 
 private:
-    Stream  *debugPort;
+    Stream *debugPort;
     float            gpsDdToDmsFormat(float ddm);
     bool             mavbeat;
     unsigned int     apm_mav_type;

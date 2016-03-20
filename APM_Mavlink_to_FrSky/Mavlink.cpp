@@ -22,9 +22,10 @@
 
 
 
-Mavlink::Mavlink(Stream* port)
-  : batteryVoltage(0.7),
-  current(0.7)
+Mavlink::Mavlink(Stream* port, Stream* debugPort) :
+        debugPort(debugPort),
+        batteryVoltage(0.7),
+        current(0.7)
 {
     mavlink_comm_0_port = port;
     mavlink_system.sysid = 12;
@@ -55,131 +56,49 @@ Mavlink::Mavlink(Stream* port)
     accZ = 0;
 }
 
-Mavlink::~Mavlink(void)
-{
-}
+Mavlink::~Mavlink(void) { }
 
-const float Mavlink::getMainBatteryVoltage()
-{
-    return batteryVoltage.get();
-}
-
-const float Mavlink::getBatteryCurrent()
-{
-    return current.get();
-}
-
-const int Mavlink::getFuelLevel()
-{
-    return batteryRemaining;
-}
-
-const int Mavlink::getGpsStatus()
-{
-    return gpsStatus;
-}
-
-const int32_t Mavlink::getLatitude()
-{
-    return latitude;
-}
-
-const int32_t Mavlink::getLongitude()
-{
-    return longitude;
-}
-
-const int32_t Mavlink::getGpsAltitude()
-{
-  // convert from millimeters to meters with rounding
-    return (gpsAltitude + 500) / 1000;
-}
-
-const float Mavlink::getGpsHdop()
-{
-    return gpsHdop / 100.0f;
-}
-
-const int Mavlink::getTemp2()
-{
-    return gpsStatus * 10 + numberOfSatelites;
-}
-
-const float Mavlink::getGpsGroundSpeed()
-{
-    return gpsGroundSpeed;
-}
-
-const float Mavlink::getAltitude()
-{
-    return altitude;
-}
-
-const int Mavlink::getTemp1()
-{
-    return apmMode;
-}
-
-const int Mavlink::getCourse()
-{
-    return course;
-}
-
-const int Mavlink::getEngineSpeed()
-{
-    return throttle;
-}
-
-const float Mavlink::getAccX()
-{
-    return accX;
-}
-
-const float Mavlink::getAccY()
-{
-    return accY;
-}
-
-const float Mavlink::getAccZ()
-{
-    return accZ;
-}
-
-const int Mavlink::getYear()
-{
-    return 0;
-}
-
-const int Mavlink::getTime()
-{
-    return 0;
-}
-
-const int Mavlink::getDate()
-{
-    return 0;
-}
+Stream& Mavlink::getChannel() const { return *mavlink_comm_0_port; }
+const float Mavlink::getMainBatteryVoltage() { return batteryVoltage.get(); }
+const float Mavlink::getBatteryCurrent() { return current.get(); }
+const int Mavlink::getFuelLevel() { return batteryRemaining; }
+const int Mavlink::getGpsStatus() { return gpsStatus; }
+const int32_t Mavlink::getLatitude() { return latitude; }
+const int32_t Mavlink::getLongitude() { return longitude; }
+const int32_t Mavlink::getGpsAltitude() { return (gpsAltitude + 500) / 1000; } //convert from millimeters to meters with rounding
+const float Mavlink::getGpsHdop() { return gpsHdop / 100.0f; }
+const int Mavlink::getTemp2() { return gpsStatus * 10 + numberOfSatelites; }
+const float Mavlink::getGpsGroundSpeed() { return gpsGroundSpeed; }
+const float Mavlink::getAltitude() { return altitude; }
+const int Mavlink::getTemp1() { return apmMode; }
+const int Mavlink::getCourse() { return course; }
+const int Mavlink::getEngineSpeed() { return throttle; }
+const float Mavlink::getAccX() { return accX; }
+const float Mavlink::getAccY() { return accY; }
+const float Mavlink::getAccZ() { return accZ; }
+const int Mavlink::getYear() { return 0; }
+const int Mavlink::getTime() { return 0; }
+const int Mavlink::getDate() { return 0; }
 
 // We receive the GPS coordinates in ddd.dddd format
 // FrSky wants the dd mm.mmm format so convert.
-float Mavlink::gpsDdToDmsFormat(float ddm)
-{
+float Mavlink::gpsDdToDmsFormat(float ddm) {
     int deg = (int)ddm;
     float min_dec = (ddm - deg) * 60.0f;
     float sec = (min_dec - (int)min_dec) * 60.0f;
-
     return (float)deg * 100.0f + (int)min_dec + sec / 100.0f;
 }
 
-void Mavlink::makeRateRequest()
-{
+void Mavlink::makeRateRequest() {
     const int  maxStreams = 6;
-    const unsigned short MAVStreams[maxStreams] = {MAV_DATA_STREAM_RAW_SENSORS,
+    const unsigned short MAVStreams[maxStreams] = {
+        MAV_DATA_STREAM_RAW_SENSORS,
         MAV_DATA_STREAM_EXTENDED_STATUS,
         MAV_DATA_STREAM_RC_CHANNELS,
         MAV_DATA_STREAM_POSITION,
         MAV_DATA_STREAM_EXTRA1,
-        MAV_DATA_STREAM_EXTRA2};
+        MAV_DATA_STREAM_EXTRA2
+    };
     const unsigned int MAVRates[maxStreams] = {0x02, 0x02, 0x05, 0x02, 0x05, 0x02};
     for (int i=0; i < maxStreams; i++) {
         mavlink_msg_request_data_stream_send(MAVLINK_COMM_0,
@@ -188,108 +107,150 @@ void Mavlink::makeRateRequest()
     }
 }
 
-bool Mavlink::parseMessage(char c)
-{
+bool Mavlink::parseMessage(char c) {
     mavlink_message_t msg;
-   mavlink_status_t status;
+    mavlink_status_t status;
 
-    // // allow CLI to be started by hitting enter 3 times, if no heartbeat packets have been received
-    // if (mavlink_active == 0 && millis() < 20000 && millis() > 5000)
-    // {
-    //     if (c == '\n' || c == '\r')
-    //     {
-    //         crlf_count++;
-    //     }
-    //     else
-    //     {
-    //         crlf_count = 0;
-    //     }
-    // }
+    //trying to grab msg
+    if (mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status)) {
+        // mavlink_active = 1;
+        switch (msg.msgid) {
+            case MAVLINK_MSG_ID_HEARTBEAT:
+            mavbeat = 1;
+            apm_mav_system    = msg.sysid;
+            apm_mav_component = msg.compid;
+            apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);
+            apmMode           = (unsigned int)mavlink_msg_heartbeat_get_custom_mode(&msg);
+            apmBaseMode       = mavlink_msg_heartbeat_get_base_mode(&msg);
+            motorArmed        = (apmBaseMode >> 7) && 1;
 
-  //trying to grab msg
-    if(mavlink_parse_char(MAVLINK_COMM_0, c, &msg, &status))
-    {
-            // mavlink_active = 1;
-        switch(msg.msgid) {
-      case MAVLINK_MSG_ID_HEARTBEAT:
-        {
-          mavbeat = 1;
-          apm_mav_system    = msg.sysid;
-          apm_mav_component = msg.compid;
-          apm_mav_type      = mavlink_msg_heartbeat_get_type(&msg);
-          apmMode           = (unsigned int)mavlink_msg_heartbeat_get_custom_mode(&msg);
-          apmBaseMode       = mavlink_msg_heartbeat_get_base_mode(&msg);
-          motorArmed        = (apmBaseMode >> 7) && 1;
-
-          //osd_nav_mode = 0;
-          lastMAVBeat = millis();
-          if(waitingMAVBeats == 1)
-              {
-            enable_mav_request = 1;
-          }
-              return true;
-        }
+            //osd_nav_mode = 0;
+            lastMAVBeat = millis();
+            if (waitingMAVBeats == 1) { enable_mav_request = 1; }
+            if (debugPort) {
+                debugPort->print("MAVLINK_MSG_ID_HEARTBEAT system: ");
+                debugPort->print(apm_mav_system);
+                debugPort->print(" apmMode: ");
+                debugPort->println(apmMode);
+            }
+            return true;
 
             case MAVLINK_MSG_ID_SYS_STATUS:
-        {
-          batteryVoltage.sample(mavlink_msg_sys_status_get_voltage_battery(&msg) / 1000.0f); //Battery voltage, in millivolts (1 = 1 millivolt)
-          current.sample(mavlink_msg_sys_status_get_current_battery(&msg) / 100.0f); //Battery current, in 10*milliamperes (1 = 10 milliampere)
-          batteryRemaining = mavlink_msg_sys_status_get_battery_remaining(&msg); //Remaining battery energy: (0%: 0, 100%: 100)
-            return true;
-        }
-
-      case MAVLINK_MSG_ID_GPS_RAW_INT:
-      {
-        latitude = mavlink_msg_gps_raw_int_get_lat(&msg);
-        longitude = mavlink_msg_gps_raw_int_get_lon(&msg);
-        gpsStatus = mavlink_msg_gps_raw_int_get_fix_type(&msg);
-        numberOfSatelites = mavlink_msg_gps_raw_int_get_satellites_visible(&msg);
-          gpsHdop = mavlink_msg_gps_raw_int_get_eph(&msg);
-          gpsAltitude = mavlink_msg_gps_raw_int_get_alt(&msg);
-          gpsCourse = mavlink_msg_gps_raw_int_get_cog(&msg);
-          return true;
-      }
-
-      case MAVLINK_MSG_ID_VFR_HUD:
-      {
-        //osd_airspeed = mavlink_msg_vfr_hud_get_airspeed(&msg);
-        gpsGroundSpeed = mavlink_msg_vfr_hud_get_groundspeed(&msg);
-        course = mavlink_msg_vfr_hud_get_heading(&msg); // 0..360 deg, 0=north
-        throttle = mavlink_msg_vfr_hud_get_throttle(&msg);
-        //if(osd_throttle > 100 && osd_throttle < 150) osd_throttle = 100;//Temporary fix for ArduPlane 2.28
-        //if(osd_throttle < 0 || osd_throttle > 150) osd_throttle = 0;//Temporary fix for ArduPlane 2.28
-        altitude = mavlink_msg_vfr_hud_get_alt(&msg);
-          break;
-      }
-
-      case MAVLINK_MSG_ID_ATTITUDE:
-      {
-        accX = ToDeg(mavlink_msg_attitude_get_pitch(&msg));
-        accY = ToDeg(mavlink_msg_attitude_get_roll(&msg));
-        accZ = ToDeg(mavlink_msg_attitude_get_yaw(&msg));
-          break;
-      }
-
-      case MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT:
-            {
-                //nav_roll = mavlink_msg_nav_controller_output_get_nav_roll(&msg);
-                //nav_pitch = mavlink_msg_nav_controller_output_get_nav_pitch(&msg);
-                //nav_bearing = mavlink_msg_nav_controller_output_get_nav_bearing(&msg);
-                //wp_target_bearing = mavlink_msg_nav_controller_output_get_target_bearing(&msg);
-                //wp_dist = mavlink_msg_nav_controller_output_get_wp_dist(&msg);
-                //alt_error = mavlink_msg_nav_controller_output_get_alt_error(&msg);
-                //aspd_error = mavlink_msg_nav_controller_output_get_aspd_error(&msg);
-                //xtrack_error = mavlink_msg_nav_controller_output_get_xtrack_error(&msg);
-                break;
+            batteryVoltage.sample(mavlink_msg_sys_status_get_voltage_battery(&msg) / 1000.0f); //Battery voltage, in millivolts
+            current.sample(mavlink_msg_sys_status_get_current_battery(&msg) / 100.0f); //Battery current, in 10*milliamperes
+            batteryRemaining = mavlink_msg_sys_status_get_battery_remaining(&msg); //Remaining battery energy: (0%: 0, 100%: 100)
+            if (debugPort) {
+                debugPort->print("MAVLINK_MSG_ID_SYS_STATUS batteryVoltage: ");
+                debugPort->print(batteryVoltage.get());
+                debugPort->print(" current: ");
+                debugPort->println(current.get());
             }
+            return true;
+
+            case MAVLINK_MSG_ID_GPS_RAW_INT:
+            latitude = mavlink_msg_gps_raw_int_get_lat(&msg);
+            longitude = mavlink_msg_gps_raw_int_get_lon(&msg);
+            gpsStatus = mavlink_msg_gps_raw_int_get_fix_type(&msg);
+            numberOfSatelites = mavlink_msg_gps_raw_int_get_satellites_visible(&msg);
+            gpsHdop = mavlink_msg_gps_raw_int_get_eph(&msg);
+            gpsAltitude = mavlink_msg_gps_raw_int_get_alt(&msg);
+            gpsCourse = mavlink_msg_gps_raw_int_get_cog(&msg);
+            if (debugPort) {
+                debugPort->print("MAVLINK_MSG_ID_GPS_RAW_INT ");
+                debugPort->print(" lat: ");  debugPort->print(latitude);
+                debugPort->print(" lon: ");  debugPort->print(longitude);
+                debugPort->print(" stat: "); debugPort->print(gpsStatus);
+                debugPort->print(" #: ");    debugPort->print(numberOfSatelites);
+                debugPort->print(" hdop: "); debugPort->print(gpsHdop);
+                debugPort->println();
+            }
+            return true;
+
+            case MAVLINK_MSG_ID_VFR_HUD:
+            //osd_airspeed = mavlink_msg_vfr_hud_get_airspeed(&msg);
+            gpsGroundSpeed = mavlink_msg_vfr_hud_get_groundspeed(&msg);
+            course = mavlink_msg_vfr_hud_get_heading(&msg); // 0..360 deg, 0=north
+            throttle = mavlink_msg_vfr_hud_get_throttle(&msg);
+            //if(osd_throttle > 100 && osd_throttle < 150) osd_throttle = 100;//Temporary fix for ArduPlane 2.28
+            //if(osd_throttle < 0 || osd_throttle > 150) osd_throttle = 0;//Temporary fix for ArduPlane 2.28
+            altitude = mavlink_msg_vfr_hud_get_alt(&msg);
+            if (debugPort) {
+                debugPort->print("MAVLINK_MSG_ID_VFR_HUD");
+                debugPort->print(" gpsGroundSpeed: ");
+                debugPort->print(gpsGroundSpeed);
+                debugPort->print(" course: ");
+                debugPort->print(course);
+                debugPort->print(" throttle: ");
+                debugPort->print(throttle);
+                debugPort->print(" altitude: ");
+                debugPort->print(altitude);
+                debugPort->println(msg.msgid);
+            }
+            break;
+
+            case MAVLINK_MSG_ID_ATTITUDE:
+            accX = ToDeg(mavlink_msg_attitude_get_pitch(&msg));
+            accY = ToDeg(mavlink_msg_attitude_get_roll(&msg));
+            accZ = ToDeg(mavlink_msg_attitude_get_yaw(&msg));
+            if (debugPort) {
+                debugPort->print("MAVLINK_MSG_ID_ATTITUDE");
+                debugPort->println();
+            }
+            break;
+
+            case MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT:
+            //nav_roll = mavlink_msg_nav_controller_output_get_nav_roll(&msg);
+            //nav_pitch = mavlink_msg_nav_controller_output_get_nav_pitch(&msg);
+            //nav_bearing = mavlink_msg_nav_controller_output_get_nav_bearing(&msg);
+            //wp_target_bearing = mavlink_msg_nav_controller_output_get_target_bearing(&msg);
+            //wp_dist = mavlink_msg_nav_controller_output_get_wp_dist(&msg);
+            //alt_error = mavlink_msg_nav_controller_output_get_alt_error(&msg);
+            //aspd_error = mavlink_msg_nav_controller_output_get_aspd_error(&msg);
+            //xtrack_error = mavlink_msg_nav_controller_output_get_xtrack_error(&msg);
+            if (debugPort) {
+                debugPort->print("MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT");
+                debugPort->print(" roll");
+                debugPort->print(mavlink_msg_nav_controller_output_get_nav_roll(&msg));
+                debugPort->println();
+            }
+            break;
+
+            case MAVLINK_MSG_ID_RC_CHANNELS_RAW:
+            if (debugPort) {
+                debugPort->print("MAVLINK_MSG_ID_RC_CHANNELS_RAW");
+                debugPort->println();
+            }
+            break;
+
+            case MAVLINK_MSG_ID_GPS_GLOBAL_ORIGIN:
+            {
+            int32_t lat = mavlink_msg_gps_global_origin_get_latitude(&msg);
+            int32_t lon = mavlink_msg_gps_global_origin_get_longitude(&msg);
+            int32_t alt = mavlink_msg_gps_global_origin_get_altitude(&msg);
+            if (debugPort) {
+                debugPort->print("MAVLINK_MSG_ID_GPS_GLOBAL_ORIGIN");
+                debugPort->print(" lat: ");
+                debugPort->print(lat);
+                debugPort->print(" lon: ");
+                debugPort->print(lon);
+                debugPort->print(" alt: ");
+                debugPort->print(alt);
+                debugPort->println();
+            }
+            }
+            break;
+
 
             default:
-        //Do nothing
-        break;
-    }
+            if (debugPort) {
+                debugPort->print("OTHER mavlink message: ");
+                debugPort->println(msg.msgid);
+            }
+            break;
+        }
     }
     // Update global packet drops counter
-  packet_drops += status.packet_rx_drop_count;
-  parse_error += status.parse_error;
+    packet_drops += status.packet_rx_drop_count;
+    parse_error += status.parse_error;
     return false;
 }

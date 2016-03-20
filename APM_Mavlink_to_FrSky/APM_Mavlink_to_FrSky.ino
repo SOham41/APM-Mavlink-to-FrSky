@@ -37,7 +37,7 @@
 #define NUMPIXELS      16
 
 // Do not enable both at the same time
-//#define DEBUG
+#define DEBUG
 //#define DEBUGFRSKY
 
 Mavlink *dataProvider;
@@ -47,7 +47,7 @@ SoftwareSerial *frSkySerial;
 Adafruit_NeoPixel leds(NUMPIXELS, 5, NEO_GRB + NEO_KHZ800);
 
 #ifdef DEBUG
-SoftwareSerial *debugSerial;
+Stream *debugSerial = NULL;
 #elif defined DEBUGFRSKY
 SoftwareSerial *frskyDebugSerial;
 #endif
@@ -64,23 +64,25 @@ void setup() {
 
 // Debug serial port pin 11 rx, 12 tx
 #ifdef DEBUG
-    debugSerial = new SoftwareSerial(12, 11);
-    debugSerial->begin(38400);
+    // debugSerial = new SoftwareSerial(12, 11);
+    Serial.begin(115200);
+    debugSerial = &Serial;
+    // debugSerial->begin(38400);
 #elif defined DEBUGFRSKY
     frskyDebugSerial = new SoftwareSerial(12, 11);
     frskyDebugSerial->begin(38400);
 #endif
 
     leds.begin();
-    leds.setPixelColor(0, 0x001100);
+    leds.setPixelColor(0, 0x110000);
     leds.show();
 
     // FrSky data port pin 6 rx, 5 tx
     frSkySerial = new SoftwareSerial(2, 3, true);
     frSkySerial->begin(9600);
     // Incoming data from APM
-    Serial.begin(57600);
-    Serial.flush();
+    Serial1.begin(57600);
+    // Serial1.flush();
 
 #ifdef DEBUG
     debugSerial->println("Initializing...");
@@ -88,7 +90,7 @@ void setup() {
     debugSerial->print(freeRam());
     debugSerial->println(" bytes");
 #endif
-    dataProvider = new Mavlink(&Serial);
+    dataProvider = new Mavlink(&Serial1, debugSerial);
 
 
     frSky = new FrSky();
@@ -116,7 +118,7 @@ void setup() {
             digitalWrite(HEARTBEATLED, LOW);
             hbState = LOW;
         }
-        delay(50);
+        delay(5);
     }
 
 #ifdef DEBUG
@@ -133,19 +135,14 @@ void setup() {
 }
 
 void loop() {
-
-    while (Serial.available() > 0)
-    {
-        if (queue.count() < 128)
-        {
-            char c = Serial.read();
+    while (dataProvider->getChannel().available() > 0) {
+        if (queue.count() < 128) {
+            char c = dataProvider->getChannel().read();
             queue.enqueue(c);
-        }
-        else
-        {
-#ifdef DEBUG
+        } else {
+            #ifdef DEBUG
             debugSerial->println("QUEUE IS FULL!");
-#endif
+            #endif
         }
     }
 
@@ -184,57 +181,38 @@ uint32_t Wheel(byte WheelPos) {
   }
 }
 
-void updateHeartbeat()
-{
+void updateHeartbeat() {
     long currentMilillis = millis();
     if(currentMilillis - hbMillis > HEARTBEATFREQ) {
         hbMillis = currentMilillis;
-        if (hbState == LOW)
-        {
-            hbState = HIGH;
-        }
-        else
-        {
-            hbState = LOW;
-        }
-        digitalWrite(HEARTBEATLED, hbState);
+        digitalWrite(HEARTBEATLED, (hbState == LOW));
     }
 }
 
-void sendFrSkyData()
-{
+void sendFrSkyData() {
     counter++;
-
-    if (counter >= 25)             // Send 5000 ms frame
-    {
+    
+    if (counter >= 25) {
+        // Send 5000 ms frame
         frSky->sendFrSky05Hz(*frSkySerial, dataProvider);
         counter = 0;
-    }
-    else if ((counter % 5) == 0) // Send 1000 ms frame
-    {
+    } else if ((counter % 5) == 0) {
+        // Send 1000 ms frame
         frSky->sendFrSky1Hz(*frSkySerial, dataProvider);
-#ifdef DEBUG
-        frSky->printValues(debugSerial, dataProvider);
-#endif
-    }
-    else                         // Send 200 ms frame
-    {
+    } else {
+        // Send 200 ms frame
         frSky->sendFrSky5Hz(*frSkySerial, dataProvider);
     }
 }
 
-void processData()
-{
-    while (queue.count() > 0)
-    {
+void processData() {
+    while (queue.count() > 0) {
         bool done = dataProvider->parseMessage(queue.dequeue());
-
-        if (done && !firstParse)
-        {
+        if (done && !firstParse) {
             firstParse = true;
-#ifdef DEBUG
+            #ifdef DEBUG
             debugSerial->println("First parse done. Start sending on frSky port.");
-#endif
+            #endif
         }
     }
 }
@@ -245,10 +223,3 @@ int freeRam () {
     int v;
     return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
 }
-
-
-
-
-
-
-

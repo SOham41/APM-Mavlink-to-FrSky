@@ -359,3 +359,40 @@ unsigned char FrSky::writeBuffer(const int length, Stream &frSkySerial)
 
   return 0;
 }
+
+void FrSky::printValues(Stream &port, IFrSkyDataProvider* dataProvider)
+{
+    port.print("Voltage: ");
+    port.print(dataProvider->getMainBatteryVoltage(), 2);
+    port.print(" Current: ");
+    port.print(dataProvider->getBatteryCurrent(), 2);
+    port.print(" Fuel: ");
+    port.print(dataProvider->getFuelLevel());
+    port.print(" Latitude: ");
+    port.print(dataProvider->getLatitude());
+    port.print(" Longitude: ");
+    port.print(dataProvider->getLongitude());
+    port.print(" GPS Alt: ");
+    port.print(dataProvider->getGpsAltitude(), 2);
+    //serialPort->print(" GPS hdop: ");
+    //serialPort->print(dataProvider->getGpsHdop(), 2);
+    port.print(" GPS status + sats: ");
+    port.print(dataProvider->getTemp2());
+    port.print(" GPS speed: ");
+    port.print(dataProvider->getGpsGroundSpeed(), 2);
+    port.print(" Home alt: ");
+    port.print(dataProvider->getAltitude(), 2);
+    port.print(" Mode: ");
+    port.print(dataProvider->getTemp1());
+    port.print(" Course: ");
+    port.print(dataProvider->getCourse());
+    port.print(" RPM: ");
+    port.print(dataProvider->getEngineSpeed());
+    port.print(" AccX: ");
+    port.print(dataProvider->getAccX(), 2);
+    port.print(" AccY: ");
+    port.print(dataProvider->getAccY(), 2);
+    port.print(" AccZ: ");
+    port.print(dataProvider->getAccZ(), 2);
+    port.println("");
+}
