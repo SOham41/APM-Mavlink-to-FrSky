@@ -76,7 +76,7 @@ public:
     const float      getBatteryCurrent();
     const float      getMainBatteryVoltage();
 
-private:
+// private:
     Stream *debugPort;
     float            gpsDdToDmsFormat(float ddm);
     bool             mavbeat;

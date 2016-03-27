@@ -131,7 +131,11 @@ bool Mavlink::parseMessage(char c) {
                 debugPort->print("MAVLINK_MSG_ID_HEARTBEAT system: ");
                 debugPort->print(apm_mav_system);
                 debugPort->print(" apmMode: ");
-                debugPort->println(apmMode);
+                debugPort->print(apmMode);
+                debugPort->print(" apmBaseMode: ");
+                debugPort->print(apmBaseMode);
+                debugPort->print(" system_status: ");
+                debugPort->println(mavlink_msg_heartbeat_get_system_status(&msg));
             }
             return true;
 

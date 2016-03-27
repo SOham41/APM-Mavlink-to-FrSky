@@ -34,7 +34,7 @@
 
 #define HEARTBEATLED 13
 #define HEARTBEATFREQ 500
-#define NUMPIXELS      16
+#define NUMPIXELS      22
 
 // Do not enable both at the same time
 #define DEBUG
@@ -152,14 +152,28 @@ void loop() {
     uint32_t time = millis();
     static uint32_t lastLed = 0;
     if ((time - lastLed) > 50) {
-        uint16_t j = (millis() >> 3) % (256 * 5);
-        for (uint16_t i=0; i < leds.numPixels(); i++) {
-            uint32_t c = Wheel(((i * 256 / leds.numPixels()) + j) & 255);
-            if (dataProvider->getGpsStatus() < 2)
-                c &= 0xFF0000; // only show red
-            else if (dataProvider->getMotorArmed())
-                c &= 0x0000FF; // only blue
-            leds.setPixelColor(i, c);
+        uint16_t j = (millis() >> 3) % 256;
+        for (uint16_t i=0; i < NUMPIXELS / 2; i++) {
+            uint32_t right = 0, left = 0;
+            if (dataProvider->getMotorArmed()) {
+                leds.setBrightness(100);
+                left = ((i * 256 / leds.numPixels()) + j) & 255; //blue
+                right = left << 8; //green
+                if (dataProvider->apmMode > 10) { //rtl, loiter, .. auto modes
+                    if (i == NUMPIXELS / 2 - 1) //back
+                        if (j < 190) //75% on blinking
+                            left = right = 0x0000FF;
+                }
+            } else {
+                uint32_t rainbow = Wheel(((i * 256 / leds.numPixels()) + j) & 255);
+                uint32_t statsColor = (dataProvider->getGpsStatus() > 2)? 0x00FF00 : 0x0000FF; //ok=green
+                left = (dataProvider->numberOfSatelites >= i)? statsColor : 0;
+                if (dataProvider->numberOfSatelites == i)
+                    left = (j > 125)? statsColor : 0; //blink last
+                right = (map(dataProvider->getMainBatteryVoltage(), 10, 12.6, 0, 11) >= i)? rainbow : 0;
+            }
+            leds.setPixelColor(i, left);
+            leds.setPixelColor(i + NUMPIXELS / 2, right);
         }
         leds.show();
         lastLed = time;
@@ -191,7 +205,7 @@ void updateHeartbeat() {
 
 void sendFrSkyData() {
     counter++;
-    
+
     if (counter >= 25) {
         // Send 5000 ms frame
         frSky->sendFrSky05Hz(*frSkySerial, dataProvider);
